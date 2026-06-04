@@ -1,0 +1,76 @@
+@page "/register"
+@model AgriSmart.Web.Pages.Account.RegisterModel
+@using AgriSmart.Web.Helpers
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#42A5F5" />
+    <title>Register — AGRI-SMART</title>
+    <link rel="stylesheet" href="~/css/bootstrap/bootstrap.min.css" />
+    <link href="~/css/app.css" rel="stylesheet" />
+    <link href="~/css/open-iconic/font/css/open-iconic-bootstrap.min.css" rel="stylesheet" />
+    <link href="~/css/icons.css" rel="stylesheet" />
+</head>
+<body>
+    <form method="post" class="auth-register-page">
+        @Html.AntiForgeryToken()
+        <div class="register-header">
+            <h1>Create Account</h1>
+            <p>Register to get started</p>
+        </div>
+
+        <div class="register-card">
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert-error">@Model.ErrorMessage</div>
+            }
+
+            <label asp-for="Input.FullName">Full Name</label>
+            <input asp-for="Input.FullName" placeholder="Enter your full name" />
+
+            <label asp-for="Input.Region">Region</label>
+            <select asp-for="Input.Region">
+                <option value="">Select your region</option>
+                @foreach (var p in PakistanData.Provinces)
+                {
+                    <option value="@p">@p</option>
+                }
+            </select>
+
+            <label asp-for="Input.Role">Role</label>
+            <select asp-for="Input.Role" disabled>
+                <option value="Farmer">Farmer</option>
+            </select>
+
+            <label asp-for="Input.Username">Username</label>
+            <input asp-for="Input.Username" placeholder="Choose a username" />
+
+            <label asp-for="Input.Email">Email</label>
+            <input asp-for="Input.Email" placeholder="Enter your email" />
+
+            <label asp-for="Input.Password">Password</label>
+            <input asp-for="Input.Password" type="password" placeholder="Create a password" />
+
+            <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+            <input asp-for="Input.ConfirmPassword" type="password" placeholder="Confirm your password" />
+
+            <label asp-for="Input.PhoneNumber">Phone (optional)</label>
+            <input asp-for="Input.PhoneNumber" placeholder="03xx-xxxxxxx" />
+
+            <div class="mb-3">
+                <input asp-for="Input.AcceptTerms" type="checkbox" id="terms" />
+                <label for="terms"> I agree to the <a href="#">Terms &amp; Conditions</a></label>
+            </div>
+
+            <button type="submit" class="btn-register">Register</button>
+
+            <div class="login-link-bottom">Already have an account? <a href="/login">Login</a></div>
+        </div>
+    </form>
+</body>
+</html>

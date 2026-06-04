@@ -1,0 +1,76 @@
+@page "/login"
+@model AgriSmart.Web.Pages.Account.LoginModel
+@using System.Linq
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1976D2" />
+    <title>Login — AGRI-SMART</title>
+    <link rel="stylesheet" href="~/css/bootstrap/bootstrap.min.css" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/app.css" rel="stylesheet" />
+    <link href="~/css/open-iconic/font/css/open-iconic-bootstrap.min.css" rel="stylesheet" />
+    <link href="~/css/icons.css" rel="stylesheet" />
+</head>
+<body>
+    <form method="post" class="auth-login-page">
+        @Html.AntiForgeryToken()
+        <div class="brand-header">
+            <div class="brand-logo"><span class="oi oi-crop" aria-hidden="true"></span></div>
+            <div class="brand-title"><span class="agri">Agri</span> <span class="smart">Smart</span></div>
+            <div class="brand-tagline">(a smart agricultural advisory system)</div>
+        </div>
+
+        <div class="login-card">
+            <h2>Welcome back!</h2>
+            <div class="mini-brand"><span class="oi oi-crop icon-sm" aria-hidden="true"></span> AGRI SMART</div>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert-error">@Model.ErrorMessage</div>
+            }
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div class="alert-error">@error.ErrorMessage</div>
+            }
+
+            <div class="input-group-agri">
+                <label asp-for="Input.Username">Username or Email</label>
+                <span class="input-icon"><span class="oi oi-person" aria-hidden="true"></span></span>
+                <input asp-for="Input.Username" placeholder="Enter your email" />
+            </div>
+
+            <div class="input-group-agri">
+                <label asp-for="Input.Password">Password</label>
+                <span class="input-icon"><span class="oi oi-lock-locked" aria-hidden="true"></span></span>
+                <input asp-for="Input.Password" type="password" placeholder="Enter your password" />
+            </div>
+
+            <div class="forgot-link"><a href="#">Forgot Password?</a></div>
+
+            <div class="mb-2">
+                <label>
+                    <input asp-for="Input.RememberMe" type="checkbox" /> Remember Me
+                </label>
+            </div>
+
+            <button type="submit" class="btn-pill-login">LOG IN</button>
+
+            <div class="signup-prompt">Don't have an account? <a href="/register">Sign Up</a></div>
+
+            <div class="social-login">
+                <div>Or connect with:</div>
+                <div class="social-btns">
+                    <button type="button" class="social-btn" disabled>G</button>
+                    <button type="button" class="social-btn" disabled>f</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</body>
+</html>

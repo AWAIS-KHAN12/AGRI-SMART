@@ -1,0 +1,20 @@
+## Visual Studio / ASP.NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.log
+
+## Secrets
+appsettings.Development.json
+**/appsettings.Development.json
+
+## SQLite dev database
+**/agrismart.db
+**/agrismart.db-*
+
+## OS
+Thumbbs.db
+.DS_Store

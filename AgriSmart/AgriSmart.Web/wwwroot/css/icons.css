@@ -1,0 +1,87 @@
+/* Open Iconic sizing helpers */
+.oi.icon-sm { font-size: 0.9rem; }
+.oi.icon-md { font-size: 1.25rem; }
+.oi.icon-lg { font-size: 1.5rem; }
+.oi.icon-xl { font-size: 2.25rem; }
+
+.brand-logo .oi {
+    font-size: 2.25rem;
+    color: #2E7D32;
+}
+
+.stat-icon .oi,
+.ql-icon .oi,
+.mgmt-icon .oi {
+    font-size: 1.4rem;
+    color: #1976D2;
+}
+
+.mgmt-icon .oi { color: #673AB7; }
+
+.ql-icon .oi { color: #2E7D32; }
+
+.stat-card .stat-icon .oi { color: #1976D2; }
+
+.input-group-agri .input-icon .oi {
+    font-size: 1rem;
+    color: #1976D2;
+}
+
+.btn-icon .oi {
+    font-size: 1.35rem;
+    vertical-align: middle;
+}
+
+.nav-icon .oi {
+    font-size: 1.35rem;
+}
+
+.crop-thumb .oi {
+    font-size: 1.75rem;
+    color: #2E7D32;
+}
+
+.pest-thumb .oi {
+    font-size: 1.35rem;
+    color: #C62828;
+}
+
+.pest-thumb.disease .oi { color: #6A1B9A; }
+
+.hour-card .oi,
+.forecast-day-row .oi {
+    font-size: 1.25rem;
+    color: #F9A825;
+}
+
+.metric-card .oi {
+    font-size: 1.1rem;
+    color: #1976D2;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.weather-icon-lg.oi {
+    font-size: 4rem;
+    color: #F9A825;
+}
+
+.admin-stat-card > .oi {
+    font-size: 1.5rem;
+    color: #673AB7;
+}
+
+.admin-stat-card:nth-child(1) > .oi { color: #2E7D32; }
+.admin-stat-card:nth-child(2) > .oi { color: #1976D2; }
+.admin-stat-card:nth-child(3) > .oi { color: #F9A825; }
+
+.star-rating .oi {
+    color: #F9A825;
+    font-size: 0.9rem;
+}
+
+.social-btn {
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 1rem;
+}
