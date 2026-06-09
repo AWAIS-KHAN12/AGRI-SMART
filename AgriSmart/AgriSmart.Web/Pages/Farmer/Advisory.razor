@@ -1,0 +1,105 @@
+@page "/farmer/advisory"
+@attribute [Authorize]
+@inject AdvisoryService AdvisoryService
+
+<div class="app-shell">
+    @* ── Header ── *@
+    <header class="app-header purple">
+        <a href="/farmer/dashboard" class="btn-icon" title="Back">
+            <span class="oi oi-arrow-left"></span>
+        </a>
+        <h1>Advisory History</h1>
+        <div style="width: 44px;"></div> @* Center helper spacer *@
+    </header>
+
+    @* ── Content ── *@
+    <div class="app-content cream">
+        @* Filters Section *@
+        <div class="filter-dates">
+            <div>
+                <label for="date-from">Date From</label>
+                <input type="date" id="date-from" @bind="_dateFrom" />
+            </div>
+            <div>
+                <label for="date-to">Date To</label>
+                <input type="date" id="date-to" @bind="_dateTo" />
+            </div>
+        </div>
+
+        <div class="filter-full">
+            <label for="crop-select">Crop</label>
+            <select id="crop-select" @bind="_selectedCrop">
+                <option value="All Crops">All Crops</option>
+                @foreach (var crop in _crops)
+                {
+                    <option value="@crop">@crop</option>
+                }
+            </select>
+        </div>
+
+        <button class="btn-search-green" @onclick="SearchAdvisories">Search</button>
+
+        @* Advisory List Section *@
+        @if (_filteredAdvisories == null)
+        {
+            <div style="text-align: center; padding: 2rem;">
+                <p>Loading advisories...</p>
+            </div>
+        }
+        else if (!_filteredAdvisories.Any())
+        {
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <p>No advisory history found matching the filters.</p>
+            </div>
+        }
+        else
+        {
+            <div style="margin-top: 0.5rem;">
+                @foreach (var advisory in _filteredAdvisories)
+                {
+                    <div class="advisory-card">
+                        <div class="date">@advisory.Date.ToString("dd MMM yyyy")</div>
+                        <div class="crop-name">@advisory.CropName</div>
+                        <div class="desc">@advisory.Description</div>
+                        <span class="tag-badge @GetTagClass(advisory.Tag)">@advisory.Tag</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @* ── Bottom Navigation ── *@
+    <BottomNav ActiveTab="Advisory" />
+</div>
+
+@code {
+    private DateTime? _dateFrom = new DateTime(2025, 5, 1);
+    private DateTime? _dateTo = new DateTime(2025, 5, 20);
+    private string _selectedCrop = "All Crops";
+
+    private List<string> _crops = new List<string>();
+    private List<AdvisoryRecord> _filteredAdvisories;
+
+    protected override void OnInitialized()
+    {
+        _crops = AdvisoryService.GetCropNames();
+        SearchAdvisories();
+    }
+
+    private void SearchAdvisories()
+    {
+        _filteredAdvisories = AdvisoryService.Search(_dateFrom, _dateTo, _selectedCrop);
+    }
+
+    private string GetTagClass(string tag)
+    {
+        return tag?.ToLower() switch
+        {
+            "fertilizer" => "tag-fertilizer",
+            "pest control" => "tag-pest",
+            "irrigation" => "tag-irrigation",
+            "harvesting" => "tag-harvest",
+            _ => "tag-fertilizer"
+        };
+    }
+}

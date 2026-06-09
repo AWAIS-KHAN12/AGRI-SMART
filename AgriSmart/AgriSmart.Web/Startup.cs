@@ -66,6 +66,7 @@ namespace AgriSmart.Web
             services.AddHttpClient();
             services.AddScoped<WeatherService>();
             services.AddScoped<PestDiseaseService>();
+            services.AddScoped<AdvisoryService>();
             services.AddHttpContextAccessor();
             services.AddControllers();
             services.AddRazorPages();
