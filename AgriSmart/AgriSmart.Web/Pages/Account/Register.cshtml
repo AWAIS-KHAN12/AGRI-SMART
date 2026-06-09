@@ -44,8 +44,9 @@
             </select>
 
             <label asp-for="Input.Role">Role</label>
-            <select asp-for="Input.Role" disabled>
+            <select asp-for="Input.Role">
                 <option value="Farmer">Farmer</option>
+                <option value="Admin">Admin</option>
             </select>
 
             <label asp-for="Input.Username">Username</label>
@@ -70,8 +71,78 @@
 
             <button type="submit" class="btn-register">Register</button>
 
+            <div class="text-center my-3 text-muted">
+                <span>Or sign up with:</span>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 8px; font-weight: 600;" onclick="simulateSocialRegister('Google')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
+                            <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0c2.204 0 4.07.813 5.485 2.13l-2.224 2.224C10.281 3.376 9.22 3 8 3c-2.427 0-4.5 1.629-5.234 3.826a4.99 4.99 0 0 0-.3 1.175c-.06.27-.093.552-.093.843s.032.573.093.843a4.978 4.978 0 0 0 .3 1.175c.734 2.197 2.807 3.826 5.234 3.826 1.38 0 2.538-.35 3.41-.975.83-.585 1.354-1.42 1.566-2.402H8v-3.2h7.545z"/>
+                        </svg>
+                        Google
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 8px; font-weight: 600;" onclick="simulateSocialRegister('Facebook')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16">
+                            <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                        </svg>
+                        Facebook
+                    </button>
+                </div>
+            </div>
+
             <div class="login-link-bottom">Already have an account? <a href="/login">Login</a></div>
         </div>
     </form>
+
+    <script>
+        function simulateSocialRegister(provider) {
+            const firstNames = ["Waleed", "Ayaz", "Zain", "Fatima", "Ayesha", "Bilal", "Hamza"];
+            const lastNames = ["Qazi", "Rafique", "Khan", "Ahmed", "Ali", "Siddiqui"];
+            const regions = ["Punjab", "Sindh", "Khyber Pakhtunkhwa", "Balochistan", "Gilgit-Baltistan", "Azad Kashmir"];
+            
+            const fName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const fullName = fName + " " + lName;
+            const username = (fName + "_" + lName + Math.floor(Math.random() * 1000)).toLowerCase();
+            const email = username + "@@gmail.com";
+            const region = regions[Math.floor(Math.random() * regions.length)];
+            
+            document.getElementById("Input_FullName").value = fullName;
+            document.getElementById("Input_Region").value = region;
+            document.getElementById("Input_Username").value = username;
+            document.getElementById("Input_Email").value = email;
+            document.getElementById("Input_Password").value = "OAuth@@1234";
+            document.getElementById("Input_ConfirmPassword").value = "OAuth@@1234";
+            
+            const phoneInput = document.getElementById("Input_PhoneNumber");
+            if (phoneInput) {
+                phoneInput.value = "0300" + Math.floor(1000000 + Math.random() * 9000000);
+            }
+            
+            const termsCheck = document.getElementById("terms");
+            if (termsCheck) {
+                termsCheck.checked = true;
+            }
+            
+            // Remove any existing social alerts
+            const existingAlert = document.getElementById("social-alert");
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alertDiv = document.createElement("div");
+            alertDiv.id = "social-alert";
+            alertDiv.className = "alert alert-info alert-dismissible fade show my-3";
+            alertDiv.role = "alert";
+            alertDiv.innerHTML = `<strong>Simulated ${provider} Sign-In!</strong> Form pre-filled. Select your role and click Register.<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+            
+            const card = document.querySelector(".register-card");
+            card.insertBefore(alertDiv, card.firstChild);
+        }
+    </script>
 </body>
 </html>

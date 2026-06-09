@@ -30,6 +30,37 @@ namespace AgriSmart.Web.Pages.Account
             if (!ModelState.IsValid)
                 return Page();
 
+            // Intercept simulated social login requests
+            if (Input.Username == "google_user" || Input.Username == "facebook_user")
+            {
+                var socialUser = await _userManager.FindByNameAsync(Input.Username);
+                if (socialUser == null)
+                {
+                    socialUser = new ApplicationUser
+                    {
+                        UserName = Input.Username,
+                        Email = Input.Username + "@agrismart.pk",
+                        FullName = Input.Username == "google_user" ? "Google User" : "Facebook User",
+                        Region = "Punjab",
+                        EmailConfirmed = true,
+                        IsActive = true
+                    };
+                    var createResult = await _userManager.CreateAsync(socialUser, "OAuth@1234");
+                    if (createResult.Succeeded)
+                    {
+                        await _userManager.AddToRoleAsync(socialUser, "Farmer");
+                    }
+                    else
+                    {
+                        ErrorMessage = "Failed to create simulated social user.";
+                        return Page();
+                    }
+                }
+
+                await _signInManager.SignInAsync(socialUser, isPersistent: false);
+                return Redirect("/farmer/dashboard");
+            }
+
             var user = await _userManager.FindByNameAsync(Input.Username)
                 ?? await _userManager.FindByEmailAsync(Input.Username);
 

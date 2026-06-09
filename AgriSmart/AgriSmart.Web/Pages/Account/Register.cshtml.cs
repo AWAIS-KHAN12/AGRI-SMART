@@ -62,8 +62,18 @@ namespace AgriSmart.Web.Pages.Account
                 return Page();
             }
 
-            await _userManager.AddToRoleAsync(user, "Farmer");
+            var role = Input.Role;
+            if (role != "Admin" && role != "Farmer")
+            {
+                role = "Farmer";
+            }
+
+            await _userManager.AddToRoleAsync(user, role);
             await _signInManager.SignInAsync(user, isPersistent: false);
+
+            if (role == "Admin")
+                return Redirect("/admin/panel");
+
             return Redirect("/farmer/dashboard");
         }
 
