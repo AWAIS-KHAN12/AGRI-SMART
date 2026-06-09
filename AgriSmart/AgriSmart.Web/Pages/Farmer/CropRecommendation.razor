@@ -1,0 +1,93 @@
+@page "/farmer/crops"
+@attribute [Authorize]
+@inject AgriSmart.Web.Services.CropRecommendationService CropService
+
+<div class="app-shell">
+    @* ── Header ── *@
+    <header class="app-header crop-green">
+        <a href="/farmer/dashboard" class="btn-icon" title="Back">
+            <span class="oi oi-arrow-left"></span>
+        </a>
+        <h1>Crop Recommendation</h1>
+        <span style="width:44px;"></span> @* spacer to center the title *@
+    </header>
+
+    @* ── Scrollable content ── *@
+    <div class="app-content">
+        @* Filters *@
+        <div class="filter-row">
+            <label>Region</label>
+            <select @bind="_selectedRegion">
+                @foreach (var p in Helpers.PakistanData.Provinces)
+                {
+                    <option value="@p">@p</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-row">
+            <label>Season</label>
+            <select @bind="_selectedSeason">
+                @foreach (var s in Helpers.PakistanData.Seasons)
+                {
+                    <option value="@s">@s</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-row">
+            <label>Soil Type</label>
+            <select @bind="_selectedSoil">
+                @foreach (var t in Helpers.PakistanData.SoilTypes)
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+
+        <button class="btn-green-full" @onclick="Search">Get Recommendations</button>
+
+        @* Results *@
+        @if (_results != null && _results.Count > 0)
+        {
+            <h3 class="section-title">Recommended Crops</h3>
+
+            @foreach (var crop in _results)
+            {
+                <div class="crop-result-card">
+                    <div class="crop-thumb">
+                        <span class="oi @crop.IconClass"></span>
+                    </div>
+                    <div>
+                        <div style="font-weight:700;">@crop.Name</div>
+                        <div class="@(crop.Suitability == "High" ? "suitability-high" : "suitability-medium")">
+                            @crop.Suitability Suitability
+                        </div>
+                        <div class="crop-duration">Duration: @crop.Duration</div>
+                    </div>
+                </div>
+            }
+        }
+        else if (_searched)
+        {
+            <p style="text-align:center;color:#757575;margin-top:1rem;">No crops found for the selected criteria. Try different filters.</p>
+        }
+    </div>
+
+    @* ── Bottom Navigation ── *@
+    <BottomNav ActiveTab="Crops" />
+</div>
+
+@code {
+    private string _selectedRegion = "Punjab";
+    private string _selectedSeason = "Kharif";
+    private string _selectedSoil = "Loamy";
+    private bool _searched;
+    private List<AgriSmart.Web.Models.CropRecommendation> _results;
+
+    private void Search()
+    {
+        _results = CropService.GetRecommendations(_selectedRegion, _selectedSeason, _selectedSoil);
+        _searched = true;
+    }
+}

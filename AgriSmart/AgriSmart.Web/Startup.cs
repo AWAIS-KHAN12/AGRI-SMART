@@ -1,6 +1,7 @@
 using System;
 using AgriSmart.Web.Data;
 using AgriSmart.Web.Models;
+using AgriSmart.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -61,6 +62,7 @@ namespace AgriSmart.Web
             services.AddScoped<AuthenticationStateProvider>(sp =>
                 sp.GetRequiredService<IdentityAuthenticationStateProvider>());
 
+            services.AddScoped<CropRecommendationService>();
             services.AddHttpContextAccessor();
             services.AddControllers();
             services.AddRazorPages();

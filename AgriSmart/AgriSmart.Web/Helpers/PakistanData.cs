@@ -11,6 +11,8 @@ namespace AgriSmart.Web.Helpers
 
         public static readonly IReadOnlyList<string> Seasons = new[] { "Kharif", "Rabi", "Year-Round" };
 
+        public static readonly IReadOnlyList<string> SoilTypes = new[] { "Loamy", "Clay", "Sandy", "Silt" };
+
         public static readonly IReadOnlyList<string> Cities = new[]
         {
             "Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Faisalabad", "Multan",

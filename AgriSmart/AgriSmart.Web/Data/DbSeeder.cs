@@ -44,7 +44,8 @@ namespace AgriSmart.Web.Data
                     FullName = "System Administrator",
                     Region = "Islamabad",
                     EmailConfirmed = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
                 };
                 var result = await userManager.CreateAsync(admin, "Admin@1234");
                 if (result.Succeeded)
@@ -52,8 +53,13 @@ namespace AgriSmart.Web.Data
             }
             else
             {
-                var token = await userManager.GeneratePasswordResetTokenAsync(admin);
-                await userManager.ResetPasswordAsync(admin, token, "Admin@1234");
+                admin.IsActive = true;
+                admin.PasswordHash = userManager.PasswordHasher.HashPassword(admin, "Admin@1234");
+                var result = await userManager.UpdateAsync(admin);
+                if (!result.Succeeded)
+                {
+                    logger.LogError("Failed to update seeded admin user: {Errors}", string.Join(", ", result.Errors));
+                }
                 if (!await userManager.IsInRoleAsync(admin, "Admin"))
                     await userManager.AddToRoleAsync(admin, "Admin");
             }

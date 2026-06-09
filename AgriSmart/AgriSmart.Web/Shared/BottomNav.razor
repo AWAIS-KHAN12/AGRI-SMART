@@ -1,0 +1,28 @@
+@* Reusable bottom navigation bar for the farmer app shell *@
+
+<nav class="bottom-nav">
+    <a href="/farmer/dashboard" class="@(ActiveTab == "Home" ? "active" : "")">
+        <span class="nav-icon"><span class="oi oi-home"></span></span>
+        <span>Home</span>
+    </a>
+    <a href="/farmer/weather" class="@(ActiveTab == "Weather" ? "active" : "")">
+        <span class="nav-icon"><span class="oi oi-cloud"></span></span>
+        <span>Weather</span>
+    </a>
+    <a href="/farmer/crops" class="@(ActiveTab == "Crops" ? "active" : "")">
+        <span class="nav-icon"><span class="oi oi-sun"></span></span>
+        <span>Crops</span>
+    </a>
+    <a href="/farmer/advisory" class="@(ActiveTab == "Advisory" ? "active" : "")">
+        <span class="nav-icon"><span class="oi oi-spreadsheet"></span></span>
+        <span>Advisory</span>
+    </a>
+    <a href="#" class="@(ActiveTab == "More" ? "active" : "")">
+        <span class="nav-icon"><span class="oi oi-ellipses"></span></span>
+        <span>More</span>
+    </a>
+</nav>
+
+@code {
+    [Parameter] public string ActiveTab { get; set; } = "Home";
+}

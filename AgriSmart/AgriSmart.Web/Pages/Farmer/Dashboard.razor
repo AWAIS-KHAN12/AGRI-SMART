@@ -1,0 +1,125 @@
+@page "/farmer/dashboard"
+@page "/admin/panel"
+@attribute [Authorize]
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+<div class="app-shell">
+    @* ── Header ── *@
+    <header class="app-header">
+        <button class="btn-icon" title="Menu">
+            <span class="oi oi-menu"></span>
+        </button>
+        <h1>AgriSmart</h1>
+        <button class="btn-icon" title="Notifications">
+            <span class="oi oi-bell"></span>
+        </button>
+    </header>
+
+    @* ── Scrollable content ── *@
+    <div class="app-content">
+        @* Greeting *@
+        <div class="greeting">
+            <h2>@_greeting, @_userName!</h2>
+            <p>Here's what's happening on your farm today.</p>
+        </div>
+
+        @* Stats grid *@
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon"><span class="oi oi-cloud icon-lg"></span></span>
+                <div>
+                    <div class="stat-value">24°C</div>
+                    <div class="stat-label">Current Temp</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-icon"><span class="oi oi-droplet icon-lg"></span></span>
+                <div>
+                    <div class="stat-value">60%</div>
+                    <div class="stat-label">Humidity</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-icon"><span class="oi oi-loop-circular icon-lg"></span></span>
+                <div>
+                    <div class="stat-value">12 km/h</div>
+                    <div class="stat-label">Wind Speed</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-icon"><span class="oi oi-circle-check icon-lg" style="color:#2E7D32;"></span></span>
+                <div>
+                    <div class="stat-value">No Risk</div>
+                    <div class="stat-label">Pest Risk</div>
+                </div>
+            </div>
+        </div>
+
+        @* Quick Links *@
+        <h3 class="section-title">Quick Links</h3>
+
+        <a href="/farmer/weather" class="quick-link-card">
+            <span class="ql-icon"><span class="oi oi-cloud"></span></span>
+            <div>
+                <div class="ql-title">Weather Forecast</div>
+                <div class="ql-desc">View detailed weather updates</div>
+            </div>
+        </a>
+
+        <a href="/farmer/crops" class="quick-link-card">
+            <span class="ql-icon"><span class="oi oi-sun"></span></span>
+            <div>
+                <div class="ql-title">Crop Recommendation</div>
+                <div class="ql-desc">Best crops for your region</div>
+            </div>
+        </a>
+
+        <a href="/farmer/pests" class="quick-link-card">
+            <span class="ql-icon"><span class="oi oi-bug"></span></span>
+            <div>
+                <div class="ql-title">Pest &amp; Disease Info</div>
+                <div class="ql-desc">Identify and manage threats</div>
+            </div>
+        </a>
+
+        <a href="/farmer/advisory" class="quick-link-card">
+            <span class="ql-icon"><span class="oi oi-clock"></span></span>
+            <div>
+                <div class="ql-title">Advisory History</div>
+                <div class="ql-desc">View past advisory and tips</div>
+            </div>
+        </a>
+    </div>
+
+    @* ── Bottom Navigation ── *@
+    <BottomNav ActiveTab="Home" />
+</div>
+
+@code {
+    private string _userName = "Farmer";
+    private string _greeting = "Good Morning";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Determine greeting based on local hour
+        var hour = DateTime.Now.Hour;
+        if (hour < 12) _greeting = "Good Morning";
+        else if (hour < 17) _greeting = "Good Afternoon";
+        else _greeting = "Good Evening";
+
+        // Try to get the logged-in user's name
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            var user = await UserManager.GetUserAsync(httpContext.User);
+            if (user != null && !string.IsNullOrWhiteSpace(user.FullName))
+            {
+                _userName = user.FullName.Split(' ')[0]; // First name only
+            }
+        }
+    }
+}
