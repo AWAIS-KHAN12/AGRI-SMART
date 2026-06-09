@@ -1,7 +1,39 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page-wrapper mobile-app-root">
-    @Body
+<div>
+    <nav class="navbar navbar-expand-md navbar-dark bg-success shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/farmer/dashboard">AGRI-SMART</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <NavMenu />
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid py-4 pb-5 mb-5">
+        @Body
+    </main>
+
+    @* Mobile Bottom Nav *@
+    <nav class="fixed-bottom d-flex justify-content-around d-md-none bg-white border-top py-2 shadow-lg">
+        <a href="/farmer/dashboard" class="text-success text-decoration-none text-center">
+            <span class="oi oi-home d-block mb-1"></span>
+            <small>Home</small>
+        </a>
+        <a href="/farmer/weather" class="text-success text-decoration-none text-center">
+            <span class="oi oi-cloud d-block mb-1"></span>
+            <small>Weather</small>
+        </a>
+        <a href="/farmer/crops" class="text-success text-decoration-none text-center">
+            <span class="oi oi-sun d-block mb-1"></span>
+            <small>Crops</small>
+        </a>
+        <a href="/farmer/advisory" class="text-success text-decoration-none text-center">
+            <span class="oi oi-spreadsheet d-block mb-1"></span>
+            <small>Advisory</small>
+        </a>
+    </nav>
 </div>
-
-@code { }

@@ -2,111 +2,102 @@
 @attribute [Authorize]
 @inject WeatherService WeatherService
 
-<div class="app-shell">
-    @* ── Header ── *@
-    <header class="app-header orange">
-        <a href="/farmer/dashboard" class="btn-icon" title="Back">
-            <span class="oi oi-arrow-left"></span>
-        </a>
-        <h1>Weather</h1>
-        <div style="width: 44px;"></div> @* Center helper spacer *@
-    </header>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">Weather Forecast</h2>
 
-    @* ── Content ── *@
-    <div class="app-content cream">
-        @* City Dropdown selector *@
-        <div class="filter-full" style="margin-bottom: 1.25rem;">
-            <label for="city-select">Select Location</label>
-            <select id="city-select" @bind="_selectedCity">
-                @foreach (var city in PakistanData.Cities)
-                {
-                    <option value="@city">@city</option>
-                }
-            </select>
+<div class="row mb-4">
+    <div class="col-12 col-md-6 col-lg-4 mx-auto mx-md-0">
+        <label for="city-select" class="form-label fw-bold">Select Location</label>
+        <select id="city-select" class="form-select" @bind="_selectedCity">
+            @foreach (var city in PakistanData.Cities)
+            {
+                <option value="@city">@city</option>
+            }
+        </select>
+    </div>
+</div>
+
+@if (_weatherData == null)
+{
+    <div class="text-center p-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading weather data...</p>
+    </div>
+}
+else
+{
+    <div class="card p-3 p-md-4 mb-4 shadow-sm border-0">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h3 class="fs-4 fw-bold mb-1"><span class="oi oi-location text-primary me-2"></span>@_weatherData.City, @_weatherData.Province</h3>
+                <div class="text-muted fs-6">Today, @_currentDate</div>
+            </div>
         </div>
 
-        @if (_weatherData == null)
+        <div class="d-flex flex-column flex-md-row align-items-center justify-content-center text-center gap-4 mb-4">
+            <span class="oi @GetWeatherIconClass(_weatherData.Condition) text-warning" style="font-size: 5rem;"></span>
+            <div>
+                <div class="display-3 fw-bold">@_weatherData.Temperature°C</div>
+                <div class="fs-5 text-muted">@_weatherData.Condition</div>
+            </div>
+        </div>
+
+        <div class="row g-3 text-center">
+            <div class="col-4">
+                <div class="bg-light rounded p-3 h-100">
+                    <span class="oi oi-droplet text-info fs-4 mb-2 d-block"></span>
+                    <div class="fw-bold fs-5">@_weatherData.Humidity%</div>
+                    <div class="text-muted small">Humidity</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="bg-light rounded p-3 h-100">
+                    <span class="oi oi-loop-circular text-success fs-4 mb-2 d-block"></span>
+                    <div class="fw-bold fs-5">@_weatherData.WindSpeed km/h</div>
+                    <div class="text-muted small">Wind</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="bg-light rounded p-3 h-100">
+                    <span class="oi oi-dashboard text-secondary fs-4 mb-2 d-block"></span>
+                    <div class="fw-bold fs-5">@_weatherData.Pressure hPa</div>
+                    <div class="text-muted small">Pressure</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="fs-5 fw-bold mb-3">Today's Forecast</h3>
+    <div class="d-flex overflow-auto pb-3 mb-4 gap-3" style="scrollbar-width: thin;">
+        @foreach (var forecast in _weatherData.HourlyForecasts)
         {
-            <div style="text-align: center; padding: 2rem;">
-                <p>Loading weather data...</p>
-            </div>
-        }
-        else
-        {
-            @* Location and Date *@
-            <div class="weather-location">
-                <span class="oi oi-location" style="color: var(--orange-weather);"></span>
-                <span>@_weatherData.City, @_weatherData.Province</span>
-            </div>
-            <div class="weather-date">
-                Today, @_currentDate
-            </div>
-
-            @* Current Temperature Details *@
-            <div class="weather-main">
-                <span class="weather-icon-lg">
-                    <span class="oi @GetWeatherIconClass(_weatherData.Condition)" style="color: var(--orange-weather);"></span>
-                </span>
-                <div style="text-align: right;">
-                    <div class="temp">@_weatherData.Temperature°c</div>
-                    <div style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">@_weatherData.Condition</div>
-                </div>
-            </div>
-
-            @* Metrics Row *@
-            <div class="weather-metrics">
-                <div class="metric-card">
-                    <span class="oi oi-droplet" style="color: #1976D2; font-size: 1.1rem; margin-bottom: 0.25rem; display: inline-block;"></span>
-                    <span class="val">@_weatherData.Humidity%</span>
-                    <span>Humidity</span>
-                </div>
-                <div class="metric-card">
-                    <span class="oi oi-loop-circular" style="color: #4CAF50; font-size: 1.1rem; margin-bottom: 0.25rem; display: inline-block;"></span>
-                    <span class="val">@_weatherData.WindSpeed km/h</span>
-                    <span>Wind</span>
-                </div>
-                <div class="metric-card">
-                    <span class="oi oi-dashboard" style="color: #795548; font-size: 1.1rem; margin-bottom: 0.25rem; display: inline-block;"></span>
-                    <span class="val">@_weatherData.Pressure hPa</span>
-                    <span>Pressure</span>
-                </div>
-            </div>
-
-            @* Today's Forecast (Hourly) *@
-            <h3 class="section-title">Today's Forecast</h3>
-            <div class="forecast-scroll" style="margin-bottom: 1.5rem;">
-                @foreach (var forecast in _weatherData.HourlyForecasts)
-                {
-                    <div class="hour-card">
-                        <div style="margin-bottom: 0.25rem; color: var(--text-muted);">@forecast.Time</div>
-                        <span class="oi @forecast.IconClass" style="font-size: 1.25rem; color: var(--orange-weather); margin: 0.35rem 0; display: inline-block;"></span>
-                        <div style="font-weight: 700;">@forecast.Temperature°</div>
-                    </div>
-                }
-            </div>
-
-            @* 5 Day Forecast *@
-            <h3 class="section-title">5 Day Forecast</h3>
-            <div class="forecast-panel">
-                @foreach (var dayForecast in _weatherData.DailyForecasts)
-                {
-                    <div class="forecast-day-row">
-                        <div style="flex: 1; font-weight: 500;">@dayForecast.Day</div>
-                        <div style="flex: 1; text-align: center;">
-                            <span class="oi @dayForecast.IconClass" style="color: var(--orange-weather); font-size: 1.1rem;"></span>
-                        </div>
-                        <div style="flex: 1; text-align: right; font-weight: 700; color: var(--text-dark);">
-                            @dayForecast.MaxTemp° / <span style="color: var(--text-muted); font-weight: 400;">@dayForecast.MinTemp°</span>
-                        </div>
-                    </div>
-                }
+            <div class="card p-3 shadow-sm border-0 text-center flex-shrink-0" style="min-width: 100px;">
+                <div class="text-muted small mb-2">@forecast.Time</div>
+                <span class="oi @forecast.IconClass text-warning fs-3 mb-2 d-block"></span>
+                <div class="fw-bold fs-5">@forecast.Temperature°</div>
             </div>
         }
     </div>
 
-    @* ── Bottom Navigation ── *@
-    <BottomNav ActiveTab="Weather" />
-</div>
+    <h3 class="fs-5 fw-bold mb-3">5 Day Forecast</h3>
+    <div class="card shadow-sm border-0 mb-4">
+        <ul class="list-group list-group-flush">
+            @foreach (var dayForecast in _weatherData.DailyForecasts)
+            {
+                <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                    <div class="fw-bold flex-fill">@dayForecast.Day</div>
+                    <div class="flex-fill text-center">
+                        <span class="oi @dayForecast.IconClass text-warning fs-5"></span>
+                    </div>
+                    <div class="fw-bold flex-fill text-end">
+                        @dayForecast.MaxTemp° <span class="text-muted fw-normal">/ @dayForecast.MinTemp°</span>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+}
 
 @code {
     private string _selectedCity = "Islamabad";
@@ -129,7 +120,6 @@
         }
     }
 
-    // Since Blazor doesn't always trigger OnParametersSetAsync for local fields, we can handle dynamic selection updates
     private string SelectedCity
     {
         get => _selectedCity;
@@ -146,7 +136,6 @@
         }
     }
 
-    // Force bind refresh
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_selectedCity != _previousCity)

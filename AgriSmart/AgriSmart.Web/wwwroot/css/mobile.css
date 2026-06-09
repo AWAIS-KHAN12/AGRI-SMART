@@ -790,31 +790,88 @@ app {
     width: calc(100% + 2rem);
 }
 
-/* Optional: centered phone frame only on large desktop for preview */
+/* Responsive Web App Dashboard Layout */
+.app-layout-wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.desktop-sidebar {
+    display: none;
+    width: 260px;
+    background: #fff;
+    border-right: 1px solid var(--card-border);
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.nav-link-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+.nav-link-item:hover { background: var(--green-light); color: var(--green-dark); }
+.nav-link-item .oi { margin-right: 0.75rem; width: 20px; text-align: center; }
+.nav-link-item.text-danger { color: #d32f2f; }
+.nav-link-item.text-danger:hover { background: #ffebee; }
+
 @media (min-width: 768px) {
     body {
-        background: #e0e0e0;
+        background: #f4f6f8;
+        padding: 0;
+        display: block;
+    }
+
+    .desktop-sidebar {
+        display: flex; /* Show sidebar on desktop */
     }
 
     .app-shell {
-        max-width: 430px;
-        margin: 0 auto;
-        box-shadow: 0 0 32px rgba(0,0,0,.15);
-        min-height: 100vh;
-    }
-
-    .bottom-nav {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-        max-width: 430px;
+        max-width: 100%;
+        margin: 0;
         border-radius: 0;
+        box-shadow: none;
+        min-height: 100vh;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        display: flex;
+        flex-direction: column;
     }
 
+    .page-wrapper {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .app-content {
+        padding: 2rem 3rem; /* More breathing room on desktop */
+    }
+
+    /* Hide mobile-specific navigation elements on desktop */
+    .bottom-nav { display: none !important; }
+    .app-header .btn-icon[title="Menu"] { display: none !important; }
+    
+    /* Make auth pages centered nicely */
     .auth-login-page,
     .auth-register-page {
-        max-width: 430px;
-        margin: 0 auto;
+        max-width: 500px;
+        margin: 4rem auto;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+        background: #fff;
+        padding: 3rem;
+    }
+    
+    .admin-stats, .admin-stats-row2, .weather-metrics {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
     }
 }
 

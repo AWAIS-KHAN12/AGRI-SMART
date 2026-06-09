@@ -3,99 +3,84 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-<div class="app-shell">
-    @* ── Header ── *@
-    <header class="app-header">
-        <button class="btn-icon" title="Menu">
-            <span class="oi oi-menu"></span>
-        </button>
-        <h1>AgriSmart</h1>
-        <button class="btn-icon" title="Notifications">
-            <span class="oi oi-bell"></span>
-        </button>
-    </header>
+<div class="greeting mb-4">
+    <h2 class="fs-4 fs-md-3 fw-bold">@_greeting, @_userName!</h2>
+    <p class="text-muted fs-6 fs-md-5">Here's what's happening on your farm today.</p>
+</div>
 
-    @* ── Scrollable content ── *@
-    <div class="app-content">
-        @* Greeting *@
-        <div class="greeting">
-            <h2>@_greeting, @_userName!</h2>
-            <p>Here's what's happening on your farm today.</p>
+@* Stats grid: 2x2 on mobile, 1x4 on desktop *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+            <span class="text-primary mb-2"><span class="oi oi-cloud fs-3"></span></span>
+            <div class="fs-4 fw-bold">24°C</div>
+            <div class="text-muted fs-6">Current Temp</div>
         </div>
-
-        @* Stats grid *@
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-icon"><span class="oi oi-cloud icon-lg"></span></span>
-                <div>
-                    <div class="stat-value">24°C</div>
-                    <div class="stat-label">Current Temp</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <span class="stat-icon"><span class="oi oi-droplet icon-lg"></span></span>
-                <div>
-                    <div class="stat-value">60%</div>
-                    <div class="stat-label">Humidity</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <span class="stat-icon"><span class="oi oi-loop-circular icon-lg"></span></span>
-                <div>
-                    <div class="stat-value">12 km/h</div>
-                    <div class="stat-label">Wind Speed</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <span class="stat-icon"><span class="oi oi-circle-check icon-lg" style="color:#2E7D32;"></span></span>
-                <div>
-                    <div class="stat-value">No Risk</div>
-                    <div class="stat-label">Pest Risk</div>
-                </div>
-            </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+            <span class="text-info mb-2"><span class="oi oi-droplet fs-3"></span></span>
+            <div class="fs-4 fw-bold">60%</div>
+            <div class="text-muted fs-6">Humidity</div>
         </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+            <span class="text-secondary mb-2"><span class="oi oi-loop-circular fs-3"></span></span>
+            <div class="fs-4 fw-bold">12 km/h</div>
+            <div class="text-muted fs-6">Wind Speed</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+            <span class="text-success mb-2"><span class="oi oi-circle-check fs-3"></span></span>
+            <div class="fs-4 fw-bold">No Risk</div>
+            <div class="text-muted fs-6">Pest Risk</div>
+        </div>
+    </div>
+</div>
 
-        @* Quick Links *@
-        <h3 class="section-title">Quick Links</h3>
-
-        <a href="/farmer/weather" class="quick-link-card">
-            <span class="ql-icon"><span class="oi oi-cloud"></span></span>
+<h3 class="fs-5 fw-bold mb-3">Quick Links</h3>
+<div class="row g-3">
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/farmer/weather" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+            <span class="bg-light text-primary p-3 rounded-3 me-3"><span class="oi oi-cloud"></span></span>
             <div>
-                <div class="ql-title">Weather Forecast</div>
-                <div class="ql-desc">View detailed weather updates</div>
-            </div>
-        </a>
-
-        <a href="/farmer/crops" class="quick-link-card">
-            <span class="ql-icon"><span class="oi oi-sun"></span></span>
-            <div>
-                <div class="ql-title">Crop Recommendation</div>
-                <div class="ql-desc">Best crops for your region</div>
-            </div>
-        </a>
-
-        <a href="/farmer/pests" class="quick-link-card">
-            <span class="ql-icon"><span class="oi oi-bug"></span></span>
-            <div>
-                <div class="ql-title">Pest &amp; Disease Info</div>
-                <div class="ql-desc">Identify and manage threats</div>
-            </div>
-        </a>
-
-        <a href="/farmer/advisory" class="quick-link-card">
-            <span class="ql-icon"><span class="oi oi-clock"></span></span>
-            <div>
-                <div class="ql-title">Advisory History</div>
-                <div class="ql-desc">View past advisory and tips</div>
+                <div class="fw-bold fs-6 fs-md-5">Weather Forecast</div>
+                <div class="text-muted small">View detailed weather updates</div>
             </div>
         </a>
     </div>
 
-    @* ── Bottom Navigation ── *@
-    <BottomNav ActiveTab="Home" />
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/farmer/crops" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+            <span class="bg-light text-warning p-3 rounded-3 me-3"><span class="oi oi-sun"></span></span>
+            <div>
+                <div class="fw-bold fs-6 fs-md-5">Crop Recommendation</div>
+                <div class="text-muted small">Best crops for your region</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/farmer/pests" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+            <span class="bg-light text-danger p-3 rounded-3 me-3"><span class="oi oi-bug"></span></span>
+            <div>
+                <div class="fw-bold fs-6 fs-md-5">Pest &amp; Disease Info</div>
+                <div class="text-muted small">Identify and manage threats</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-4">
+        <a href="/farmer/advisory" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+            <span class="bg-light text-success p-3 rounded-3 me-3"><span class="oi oi-clock"></span></span>
+            <div>
+                <div class="fw-bold fs-6 fs-md-5">Advisory History</div>
+                <div class="text-muted small">View past advisory and tips</div>
+            </div>
+        </a>
+    </div>
 </div>
 
 @code {

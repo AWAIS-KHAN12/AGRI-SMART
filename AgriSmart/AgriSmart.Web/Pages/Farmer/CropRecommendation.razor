@@ -2,81 +2,71 @@
 @attribute [Authorize]
 @inject AgriSmart.Web.Services.CropRecommendationService CropService
 
-<div class="app-shell">
-    @* ── Header ── *@
-    <header class="app-header crop-green">
-        <a href="/farmer/dashboard" class="btn-icon" title="Back">
-            <span class="oi oi-arrow-left"></span>
-        </a>
-        <h1>Crop Recommendation</h1>
-        <span style="width:44px;"></span> @* spacer to center the title *@
-    </header>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">Crop Recommendation</h2>
 
-    @* ── Scrollable content ── *@
-    <div class="app-content">
-        @* Filters *@
-        <div class="filter-row">
-            <label>Region</label>
-            <select @bind="_selectedRegion">
-                @foreach (var p in Helpers.PakistanData.Provinces)
-                {
-                    <option value="@p">@p</option>
-                }
-            </select>
-        </div>
-
-        <div class="filter-row">
-            <label>Season</label>
-            <select @bind="_selectedSeason">
-                @foreach (var s in Helpers.PakistanData.Seasons)
-                {
-                    <option value="@s">@s</option>
-                }
-            </select>
-        </div>
-
-        <div class="filter-row">
-            <label>Soil Type</label>
-            <select @bind="_selectedSoil">
-                @foreach (var t in Helpers.PakistanData.SoilTypes)
-                {
-                    <option value="@t">@t</option>
-                }
-            </select>
-        </div>
-
-        <button class="btn-green-full" @onclick="Search">Get Recommendations</button>
-
-        @* Results *@
-        @if (_results != null && _results.Count > 0)
-        {
-            <h3 class="section-title">Recommended Crops</h3>
-
-            @foreach (var crop in _results)
+<div class="card p-3 p-md-4 mb-4 shadow-sm border-0 mx-auto" style="max-width: 600px;">
+    <div class="mb-3">
+        <label class="form-label fw-bold">Region</label>
+        <select class="form-select w-100" @bind="_selectedRegion">
+            @foreach (var p in Helpers.PakistanData.Provinces)
             {
-                <div class="crop-result-card">
-                    <div class="crop-thumb">
-                        <span class="oi @crop.IconClass"></span>
-                    </div>
-                    <div>
-                        <div style="font-weight:700;">@crop.Name</div>
-                        <div class="@(crop.Suitability == "High" ? "suitability-high" : "suitability-medium")">
-                            @crop.Suitability Suitability
-                        </div>
-                        <div class="crop-duration">Duration: @crop.Duration</div>
-                    </div>
-                </div>
+                <option value="@p">@p</option>
             }
-        }
-        else if (_searched)
-        {
-            <p style="text-align:center;color:#757575;margin-top:1rem;">No crops found for the selected criteria. Try different filters.</p>
-        }
+        </select>
     </div>
 
-    @* ── Bottom Navigation ── *@
-    <BottomNav ActiveTab="Crops" />
+    <div class="mb-3">
+        <label class="form-label fw-bold">Season</label>
+        <select class="form-select w-100" @bind="_selectedSeason">
+            @foreach (var s in Helpers.PakistanData.Seasons)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">Soil Type</label>
+        <select class="form-select w-100" @bind="_selectedSoil">
+            @foreach (var t in Helpers.PakistanData.SoilTypes)
+            {
+                <option value="@t">@t</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-success w-100 py-2 fw-bold" @onclick="Search">Get Recommendations</button>
 </div>
+
+@if (_results != null && _results.Count > 0)
+{
+    <h3 class="fs-5 fw-bold mb-3">Recommended Crops</h3>
+    <div class="row g-3">
+        @foreach (var crop in _results)
+        {
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center">
+                    <span class="bg-light text-success p-3 rounded-3 me-3">
+                        <span class="oi @crop.IconClass fs-4"></span>
+                    </span>
+                    <div>
+                        <div class="fw-bold fs-6 fs-md-5">@crop.Name</div>
+                        <span class="badge @(crop.Suitability == "High" ? "bg-success" : "bg-warning text-dark") mb-1">
+                            @crop.Suitability Suitability
+                        </span>
+                        <div class="text-muted small">Duration: @crop.Duration</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (_searched)
+{
+    <div class="alert alert-secondary text-center mx-auto" style="max-width: 600px;">
+        No crops found for the selected criteria. Try different filters.
+    </div>
+}
 
 @code {
     private string _selectedRegion = "Punjab";

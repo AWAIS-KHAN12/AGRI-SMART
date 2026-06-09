@@ -2,75 +2,67 @@
 @attribute [Authorize]
 @inject AdvisoryService AdvisoryService
 
-<div class="app-shell">
-    @* ── Header ── *@
-    <header class="app-header purple">
-        <a href="/farmer/dashboard" class="btn-icon" title="Back">
-            <span class="oi oi-arrow-left"></span>
-        </a>
-        <h1>Advisory History</h1>
-        <div style="width: 44px;"></div> @* Center helper spacer *@
-    </header>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">Advisory History</h2>
 
-    @* ── Content ── *@
-    <div class="app-content cream">
-        @* Filters Section *@
-        <div class="filter-dates">
-            <div>
-                <label for="date-from">Date From</label>
-                <input type="date" id="date-from" @bind="_dateFrom" />
-            </div>
-            <div>
-                <label for="date-to">Date To</label>
-                <input type="date" id="date-to" @bind="_dateTo" />
-            </div>
+<div class="card p-3 p-md-4 mb-4 shadow-sm border-0 mx-auto" style="max-width: 800px;">
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-6">
+            <label for="date-from" class="form-label fw-bold">Date From</label>
+            <input type="date" id="date-from" class="form-control" @bind="_dateFrom" />
         </div>
-
-        <div class="filter-full">
-            <label for="crop-select">Crop</label>
-            <select id="crop-select" @bind="_selectedCrop">
-                <option value="All Crops">All Crops</option>
-                @foreach (var crop in _crops)
-                {
-                    <option value="@crop">@crop</option>
-                }
-            </select>
+        <div class="col-12 col-md-6">
+            <label for="date-to" class="form-label fw-bold">Date To</label>
+            <input type="date" id="date-to" class="form-control" @bind="_dateTo" />
         </div>
+    </div>
 
-        <button class="btn-search-green" @onclick="SearchAdvisories">Search</button>
+    <div class="mb-4">
+        <label for="crop-select" class="form-label fw-bold">Crop</label>
+        <select id="crop-select" class="form-select w-100" @bind="_selectedCrop">
+            <option value="All Crops">All Crops</option>
+            @foreach (var crop in _crops)
+            {
+                <option value="@crop">@crop</option>
+            }
+        </select>
+    </div>
 
-        @* Advisory List Section *@
-        @if (_filteredAdvisories == null)
+    <button class="btn btn-success w-100 py-2 fw-bold" @onclick="SearchAdvisories">Search</button>
+</div>
+
+@if (_filteredAdvisories == null)
+{
+    <div class="text-center p-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading advisories...</p>
+    </div>
+}
+else if (!_filteredAdvisories.Any())
+{
+    <div class="alert alert-secondary text-center mx-auto" style="max-width: 800px;">
+        No advisory history found matching the filters.
+    </div>
+}
+else
+{
+    <div class="mx-auto" style="max-width: 800px;">
+        @foreach (var advisory in _filteredAdvisories)
         {
-            <div style="text-align: center; padding: 2rem;">
-                <p>Loading advisories...</p>
-            </div>
-        }
-        else if (!_filteredAdvisories.Any())
-        {
-            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                <p>No advisory history found matching the filters.</p>
-            </div>
-        }
-        else
-        {
-            <div style="margin-top: 0.5rem;">
-                @foreach (var advisory in _filteredAdvisories)
-                {
-                    <div class="advisory-card">
-                        <div class="date">@advisory.Date.ToString("dd MMM yyyy")</div>
-                        <div class="crop-name">@advisory.CropName</div>
-                        <div class="desc">@advisory.Description</div>
-                        <span class="tag-badge @GetTagClass(advisory.Tag)">@advisory.Tag</span>
-                    </div>
-                }
+            <div class="card p-3 p-md-4 mb-3 shadow-sm border-0">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="fw-bold fs-5 text-primary">@advisory.CropName</div>
+                    <div class="text-muted small">@advisory.Date.ToString("dd MMM yyyy")</div>
+                </div>
+                <p class="mb-3">@advisory.Description</p>
+                <div>
+                    <span class="badge @GetTagClass(advisory.Tag)">@advisory.Tag</span>
+                </div>
             </div>
         }
     </div>
-
-    @* ── Bottom Navigation ── *@
-    <BottomNav ActiveTab="Advisory" />
-</div>
+}
 
 @code {
     private DateTime? _dateFrom = new DateTime(2025, 5, 1);
@@ -95,11 +87,11 @@
     {
         return tag?.ToLower() switch
         {
-            "fertilizer" => "tag-fertilizer",
-            "pest control" => "tag-pest",
-            "irrigation" => "tag-irrigation",
-            "harvesting" => "tag-harvest",
-            _ => "tag-fertilizer"
+            "fertilizer" => "bg-primary",
+            "pest control" => "bg-danger",
+            "irrigation" => "bg-info text-dark",
+            "harvesting" => "bg-success",
+            _ => "bg-secondary"
         };
     }
 }
