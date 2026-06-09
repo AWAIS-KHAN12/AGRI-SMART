@@ -63,6 +63,9 @@ namespace AgriSmart.Web
                 sp.GetRequiredService<IdentityAuthenticationStateProvider>());
 
             services.AddScoped<CropRecommendationService>();
+            services.AddHttpClient();
+            services.AddScoped<WeatherService>();
+            services.AddScoped<PestDiseaseService>();
             services.AddHttpContextAccessor();
             services.AddControllers();
             services.AddRazorPages();

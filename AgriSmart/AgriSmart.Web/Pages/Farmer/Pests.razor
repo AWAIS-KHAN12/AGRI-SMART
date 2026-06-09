@@ -1,0 +1,135 @@
+@page "/farmer/pests"
+@attribute [Authorize]
+@inject PestDiseaseService PestDiseaseService
+
+<div class="app-shell">
+    @* ── Header ── *@
+    <header class="app-header red">
+        <a href="/farmer/dashboard" class="btn-icon" title="Back">
+            <span class="oi oi-arrow-left"></span>
+        </a>
+        <h1>Pest &amp; Disease</h1>
+        <div style="width: 44px;"></div> @* Center helper spacer *@
+    </header>
+
+    @* ── Content ── *@
+    <div class="app-content cream">
+        @* Search bar *@
+        <div class="search-bar-pest">
+            <input type="text" placeholder="Search pests or diseases..." @bind-value="_searchQuery" @bind-value:event="oninput" />
+            <span class="oi oi-magnifying-glass" style="color: var(--text-muted);"></span>
+        </div>
+
+        @* Filter items *@
+        @{
+            var filteredItems = PestDiseaseService.Search(_searchQuery);
+            var pests = filteredItems.Where(x => x.Type == "Pest").ToList();
+            var diseases = filteredItems.Where(x => x.Type == "Disease").ToList();
+        }
+
+        @* Common Pests Section *@
+        <h3 class="section-title">Common Pests</h3>
+        @if (!pests.Any())
+        {
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; font-style: italic;">No pests match your search.</p>
+        }
+        else
+        {
+            <div style="margin-bottom: 1rem;">
+                @foreach (var item in pests)
+                {
+                    <div class="pest-list-card" @onclick="() => ShowDetail(item)">
+                        <img src="@item.ImagePath" alt="@item.Name" class="pest-thumb" style="object-fit: cover;" />
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-dark);">@item.Name</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                @item.ShortDescription
+                            </div>
+                        </div>
+                        <span class="oi oi-chevron-right" style="color: var(--text-muted); font-size: 0.85rem; margin-left: auto;"></span>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Common Diseases Section *@
+        <h3 class="section-title">Common Diseases</h3>
+        @if (!diseases.Any())
+        {
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; font-style: italic;">No diseases match your search.</p>
+        }
+        else
+        {
+            <div style="margin-bottom: 1.5rem;">
+                @foreach (var item in diseases)
+                {
+                    <div class="pest-list-card" @onclick="() => ShowDetail(item)">
+                        <img src="@item.ImagePath" alt="@item.Name" class="pest-thumb" style="object-fit: cover;" />
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-dark);">@item.Name</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                @item.ShortDescription
+                            </div>
+                        </div>
+                        <span class="oi oi-chevron-right" style="color: var(--text-muted); font-size: 0.85rem; margin-left: auto;"></span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @* ── Detail Modal Overlay ── *@
+    @if (_selectedItem != null)
+    {
+        <div class="sidebar-overlay" @onclick="HideDetail">
+            <div class="sidebar-drawer" style="left: auto; right: 0; width: min(360px, 90vw); display: flex; flex-direction: column; padding: 0;" @onclick:stopPropagation>
+                @* Modal Header *@
+                <div class="app-header red" style="position: static; padding: 0.75rem 1rem;">
+                    <h1 style="text-align: left; padding: 0;">@_selectedItem.Name (@_selectedItem.Type)</h1>
+                    <button class="btn-icon" @onclick="HideDetail" title="Close" style="min-width: 36px; min-height: 36px;">
+                        <span class="oi oi-x"></span>
+                    </button>
+                </div>
+
+                @* Modal Body *@
+                <div style="flex: 1; overflow-y: auto; padding: 1rem; background: #FFF;">
+                    <img src="@_selectedItem.ImagePath" alt="@_selectedItem.Name" style="width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--card-border);" />
+
+                    <h4 style="font-weight: 700; margin: 0.5rem 0 0.25rem; font-size: 0.95rem; color: var(--red-pest);">Overview</h4>
+                    <p style="font-size: 0.85rem; line-height: 1.45; color: var(--text-dark); margin-bottom: 1rem;">@_selectedItem.Description</p>
+
+                    <h4 style="font-weight: 700; margin: 0.5rem 0 0.25rem; font-size: 0.95rem; color: var(--red-pest);">Symptoms</h4>
+                    <p style="font-size: 0.85rem; line-height: 1.45; color: var(--text-dark); margin-bottom: 1rem;">@_selectedItem.Symptoms</p>
+
+                    <h4 style="font-weight: 700; margin: 0.5rem 0 0.25rem; font-size: 0.95rem; color: var(--red-pest);">Management &amp; Control</h4>
+                    <div style="font-size: 0.85rem; line-height: 1.45; color: var(--text-dark); background: var(--green-light); padding: 0.75rem; border-radius: 8px; border-left: 4px solid var(--green-mid); white-space: pre-line;">
+                        @_selectedItem.ControlMeasures
+                    </div>
+                </div>
+
+                @* Modal Footer *@
+                <div style="padding: 0.75rem 1rem; background: #fafafa; border-top: 1px solid var(--card-border); text-align: center;">
+                    <button class="btn-green-full" style="margin: 0; background: var(--red-pest);" @onclick="HideDetail">Close Details</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── Bottom Navigation ── *@
+    <BottomNav ActiveTab="Home" />
+</div>
+
+@code {
+    private string _searchQuery = "";
+    private PestDiseaseItem _selectedItem;
+
+    private void ShowDetail(PestDiseaseItem item)
+    {
+        _selectedItem = item;
+    }
+
+    private void HideDetail()
+    {
+        _selectedItem = null;
+    }
+}
