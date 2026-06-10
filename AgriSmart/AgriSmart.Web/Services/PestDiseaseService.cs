@@ -13,35 +13,35 @@ namespace AgriSmart.Web.Services
             new PestDiseaseItem
             {
                 Id = 1,
-                Name = "Aphids",
+                Name = "Caterpillar",
                 Type = "Pest",
-                ShortDescription = "Small green insects on leaves.",
-                Description = "Aphids are small sap-sucking insects that colonize the tender stems and leaves of plants. They multiply rapidly and secrete a sticky substance called honeydew, which attracts ants and promotes sooty mold growth.",
-                ImagePath = "images/aphids.png",
-                Symptoms = "Curled or distorted leaves, yellowing foliage, stunted plant growth, sticky honeydew residue on leaves, and presence of tiny green, black, or peach-colored insects in clusters.",
-                ControlMeasures = "Organic Control: Spray plants with a strong stream of water to dislodge them, apply organic neem oil or insecticidal soap, and introduce natural predators like ladybugs.\n\nChemical Control: If infestation is severe, apply systemic insecticides containing Imidacloprid or Thiamethoxam according to manufacturer guidelines."
+                ShortDescription = "Hairy larvae that devour leaves.",
+                Description = "Caterpillars are the larval stage of moths and butterflies. The hairy/spiny varieties found in crops are highly destructive defoliators. They consume tender leaves, stems, and buds, causing rapid and widespread damage to vegetable and fruit crops.",
+                ImagePath = "images/caterpillar.png",
+                Symptoms = "Irregular holes and ragged edges on leaves, complete defoliation of young plants, presence of hairy green or black-dotted larvae on leaf surfaces, dark frass (droppings) on leaves and under plants.",
+                ControlMeasures = "Organic Control: Handpick and destroy larvae early in the morning. Spray Bacillus thuringiensis (Bt) which is highly effective against caterpillars. Introduce parasitic wasps as natural predators.\n\nChemical Control: Apply contact insecticides such as Chlorpyrifos, Lambda-cyhalothrin, or Spinosad. Ensure thorough coverage of the underside of leaves where larvae often hide."
             },
             new PestDiseaseItem
             {
                 Id = 2,
-                Name = "Whitefly",
+                Name = "Wireworm",
                 Type = "Pest",
-                ShortDescription = "Sucks sap from leaves.",
-                Description = "Whiteflies are tiny, sap-sucking winged insects related to aphids. They are typically found on the undersides of leaves, weakening the plant by draining vital nutrients and transmitting destructive plant viruses.",
-                ImagePath = "images/whitefly.png",
-                Symptoms = "Yellowing of leaves, premature leaf drop, sticky honeydew coating, and a visible cloud of tiny white moth-like insects that flutter when the plant is shaken or disturbed.",
-                ControlMeasures = "Organic Control: Install yellow sticky traps to capture adult flies, spray the undersides of leaves with neem oil, or introduce predatory lacewings.\n\nChemical Control: Apply foliar sprays containing Acetamiprid, Bifenthrin, or Cypermethrin in rotation to prevent resistance."
+                ShortDescription = "Root-feeding soil larvae.",
+                Description = "Wireworms are the larval stage of click beetles (family Elateridae). They are hard-bodied, golden-orange cylindrical larvae that live in the soil for 3–5 years, feeding on plant roots, seeds, and underground stems, making them among the most damaging soil pests in agriculture.",
+                ImagePath = "images/wireworm.png",
+                Symptoms = "Seedling wilting and death, stunted plant growth, visible tunneling damage in tubers and roots (especially potatoes), poor germination, and thin patchy stands in fields.",
+                ControlMeasures = "Organic Control: Deep-till soil before planting to expose larvae to birds and predators. Rotate crops to break the pest cycle. Avoid planting susceptible crops in heavily infested fields.\n\nChemical Control: Apply soil insecticides such as Chlorpyrifos, Tefluthrin, or Fipronil as a seed treatment or in-furrow application at planting time."
             },
             new PestDiseaseItem
             {
                 Id = 3,
-                Name = "Fruit Borer",
+                Name = "Japanese Beetle",
                 Type = "Pest",
-                ShortDescription = "Larvae bore into fruits.",
-                Description = "Fruit borers are the larval stages of moths that bore into developing vegetable and fruit crops. They feed internally, destroying the crop from the inside and making it completely unmarketable.",
-                ImagePath = "images/fruit_borer.png",
-                Symptoms = "Visible entry holes on fruits (like tomatoes, eggplants, or peppers), dark insect droppings (frass) near the holes, premature fruit ripening and dropping, and internal decay.",
-                ControlMeasures = "Organic Control: Handpick and destroy infested fruits and larvae immediately, install pheromone traps to capture male moths, and spray Bacillus thuringiensis (Bt) or Spinosad.\n\nChemical Control: Apply targeted larvicides like Chlorantraniliprole or Flubendiamide during early larval stages before they enter the fruits."
+                ShortDescription = "Beetles that skeletonize leaves.",
+                Description = "Japanese beetles (Popillia japonica) are highly destructive invasive insects with metallic green and copper-brown bodies. Both adults and larvae cause damage — adults skeletonize leaves and feed on flowers and fruits, while larvae (grubs) feed on grass and plant roots underground.",
+                ImagePath = "images/japanese_beetle.png",
+                Symptoms = "Leaves with tissue eaten between veins leaving a lacy, skeletonized appearance. Damaged fruits and flowers. Brown irregular patches in lawns due to grub activity underground. Large groups of beetles aggregating on plants.",
+                ControlMeasures = "Organic Control: Handpick beetles in the early morning when they are sluggish. Install pheromone beetle traps away from the garden. Apply Milky Spore (Bacillus popilliae) powder to soil to kill grubs.\n\nChemical Control: Apply systemic insecticides such as Imidacloprid or Carbaryl for adult control. For grubs, use soil-applied insecticides containing Chlorantraniliprole or Trichlorfon."
             },
 
             // Diseases

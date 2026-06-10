@@ -1,86 +1,140 @@
 @page "/farmer/advisory"
 @attribute [Authorize]
 @inject AdvisoryService AdvisoryService
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
 
-<h2 class="fs-4 fs-md-3 fw-bold mb-4">Advisory History</h2>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">@AppState.T("Advisory History", "زرعی مشاورتی تاریخ")</h2>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger text-center mx-auto mb-4" role="alert" style="max-width: 800px;">
+        @_errorMessage
+    </div>
+}
 
 <div class="card p-3 p-md-4 mb-4 shadow-sm border-0 mx-auto" style="max-width: 800px;">
     <div class="row g-3 mb-3">
         <div class="col-12 col-md-6">
-            <label for="date-from" class="form-label fw-bold">Date From</label>
+            <label for="date-from" class="form-label fw-bold">@AppState.T("Date From", "تاریخ سے")</label>
             <input type="date" id="date-from" class="form-control" @bind="_dateFrom" />
         </div>
         <div class="col-12 col-md-6">
-            <label for="date-to" class="form-label fw-bold">Date To</label>
+            <label for="date-to" class="form-label fw-bold">@AppState.T("Date To", "تاریخ تک")</label>
             <input type="date" id="date-to" class="form-control" @bind="_dateTo" />
         </div>
     </div>
 
     <div class="mb-4">
-        <label for="crop-select" class="form-label fw-bold">Crop</label>
-        <select id="crop-select" class="form-select w-100" @bind="_selectedCrop">
-            <option value="All Crops">All Crops</option>
+        <label for="crop-select" class="form-label fw-bold">@AppState.T("Crop", "فصل")</label>
+        <select id="crop-select" class="form-select w-100" value="@_selectedCrop" @onchange="OnCropChanged">
+            <option value="All Crops">@AppState.T("All Crops", "تمام فصلیں")</option>
             @foreach (var crop in _crops)
             {
-                <option value="@crop">@crop</option>
+                <option value="@crop">@(AppState.IsUrdu ? TranslateCropName(crop) : crop)</option>
             }
         </select>
     </div>
 
-    <button class="btn btn-success w-100 py-2 fw-bold" @onclick="SearchAdvisories">Search</button>
+    <button class="btn btn-success w-100 py-2 fw-bold" @onclick="SearchAdvisories">@AppState.T("Search", "تلاش کریں")</button>
 </div>
 
-@if (_filteredAdvisories == null)
+@if (_loading)
 {
     <div class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
+        <div class="spinner-border text-success" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-3 text-muted">Loading advisories...</p>
-    </div>
-}
-else if (!_filteredAdvisories.Any())
-{
-    <div class="alert alert-secondary text-center mx-auto" style="max-width: 800px;">
-        No advisory history found matching the filters.
+        <p class="mt-3 text-muted">@AppState.T("Loading advisories...", "مشورے لوڈ ہو رہے ہیں...")</p>
     </div>
 }
 else
 {
-    <div class="mx-auto" style="max-width: 800px;">
-        @foreach (var advisory in _filteredAdvisories)
-        {
-            <div class="card p-3 p-md-4 mb-3 shadow-sm border-0">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="fw-bold fs-5 text-primary">@advisory.CropName</div>
-                    <div class="text-muted small">@advisory.Date.ToString("dd MMM yyyy")</div>
+    @if (_filteredAdvisories == null)
+    {
+        <div class="text-center text-muted">@AppState.T("Initializing data...", "ڈیٹا شروع ہو رہا ہے...")</div>
+    }
+    else if (!_filteredAdvisories.Any())
+    {
+        <div class="alert alert-secondary text-center mx-auto" style="max-width: 800px;">
+            @AppState.T("No advisory history found matching the filters.", "فلٹرز کے مطابق کوئی مشورے نہیں ملے۔")
+        </div>
+    }
+    else
+    {
+        <div class="mx-auto" style="max-width: 800px;">
+            @foreach (var advisory in _filteredAdvisories)
+            {
+                <div class="card p-3 p-md-4 mb-3 shadow-sm border-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-bold fs-5 text-primary">@(AppState.IsUrdu ? TranslateCropName(advisory.CropName) : advisory.CropName)</div>
+                        <div class="text-muted small">@TranslateDate(advisory.Date)</div>
+                    </div>
+                    <p class="mb-3">@(AppState.IsUrdu ? TranslateDescription(advisory.Description) : advisory.Description)</p>
+                    <div>
+                        <span class="badge @GetTagClass(advisory.Tag)">@(AppState.IsUrdu ? TranslateTag(advisory.Tag) : advisory.Tag)</span>
+                    </div>
                 </div>
-                <p class="mb-3">@advisory.Description</p>
-                <div>
-                    <span class="badge @GetTagClass(advisory.Tag)">@advisory.Tag</span>
-                </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 }
 
 @code {
     private DateTime? _dateFrom = new DateTime(2025, 5, 1);
     private DateTime? _dateTo = new DateTime(2025, 5, 20);
     private string _selectedCrop = "All Crops";
+    private bool _loading;
+    private string _errorMessage;
 
     private List<string> _crops = new List<string>();
     private List<AdvisoryRecord> _filteredAdvisories;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _crops = AdvisoryService.GetCropNames();
-        SearchAdvisories();
+        AppState.OnChange += StateHasChanged;
+        try
+        {
+            _loading = true;
+            _errorMessage = null;
+            _crops = AdvisoryService.GetCropNames() ?? new List<string>();
+            await SearchAdvisories();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to load crops metadata: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
     }
 
-    private void SearchAdvisories()
+    private async Task OnCropChanged(ChangeEventArgs e)
     {
-        _filteredAdvisories = AdvisoryService.Search(_dateFrom, _dateTo, _selectedCrop);
+        _selectedCrop = e.Value?.ToString();
+        await SearchAdvisories();
+    }
+
+    private async Task SearchAdvisories()
+    {
+        try
+        {
+            _loading = true;
+            _errorMessage = null;
+            await Task.Delay(200); // Simulate network load
+            _filteredAdvisories = AdvisoryService.Search(_dateFrom, _dateTo, _selectedCrop) ?? new List<AdvisoryRecord>();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to filter advisories: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
     }
 
     private string GetTagClass(string tag)
@@ -93,5 +147,124 @@ else
             "harvesting" => "bg-success",
             _ => "bg-secondary"
         };
+    }
+
+    private string TranslateTag(string tag)
+    {
+        return tag switch
+        {
+            "Fertilizer" => "کھاد کا استعمال",
+            "Pest Control" => "کیڑوں سے بچاؤ",
+            "Irrigation" => "آبپاشی / پانی دینا",
+            "Harvesting" => "کٹائی",
+            _ => tag
+        };
+    }
+
+    private string TranslateCropName(string name)
+    {
+        return name switch
+        {
+            "Wheat" => "گندم",
+            "Cotton" => "کپاس",
+            "Rice" => "چاول / دھان",
+            "Sugarcane" => "گنا",
+            "Maize" => "مکئی",
+            "Potato" => "آلو",
+            "Tomato" => "ٹماٹر",
+            "Onion" => "پیاز",
+            "Chili" or "Chilli" => "مرچ",
+            "Citrus" => "مالٹا",
+            "Mango" => "آم",
+            "Sunflower" => "سورج مکھی",
+            "Soybean" => "سویا بین",
+            "Millet" => "باجرہ",
+            "Sorghum" => "جوار",
+            "Sesame" => "تل",
+            "Barley" => "جو",
+            "Chickpea" or "Gram" => "چنا",
+            "Lentil" => "مسور",
+            "Mustard" => "سرسوں",
+            "Spinach" => "پالک",
+            "Carrot" => "گاجر",
+            _ => name
+        };
+    }
+
+    private string TranslateDate(DateTime date)
+    {
+        if (AppState.IsUrdu)
+        {
+            var day = date.Day.ToString();
+            var month = date.Month switch
+            {
+                1 => "جنوری",
+                2 => "فروری",
+                3 => "مارچ",
+                4 => "اپریل",
+                5 => "مئی",
+                6 => "جون",
+                7 => "جولائی",
+                8 => "اگست",
+                9 => "ستمبر",
+                10 => "اکتوبر",
+                11 => "نومبر",
+                12 => "دسمبر",
+                _ => ""
+            };
+            var year = date.Year.ToString();
+            return $"{day} {month} {year}";
+        }
+        else
+        {
+            return date.ToString("dd MMM yyyy");
+        }
+    }
+
+    private string TranslateDescription(string desc)
+    {
+        if (string.IsNullOrEmpty(desc)) return "";
+        
+        return desc switch
+        {
+            "Apply nitrogen fertilizer in the morning." => "صبح کے وقت نائٹروجن کھاد ڈالیں۔",
+            "Monitor for whitefly and spray neem oil." => "سفید مکھی کی نگرانی کریں اور نیم کے تیل کا سپرے کریں۔",
+            "Irrigation recommended after 7 days." => "7 دن بعد آبپاشی کی سفارش کی جاتی ہے۔",
+            "Harvest crop when grains are hard." => "جب دانے سخت ہو جائیں تو فصل کی کٹائی کریں۔",
+            "Apply potash fertilizer at tillering stage." => "شگوفے نکلنے کے مرحلے پر پوٹاش کھاد ڈالیں۔",
+            "Inspect fields for stem borer moths." => "کھیتوں کا تنا چھیدنے والے کیڑے کے لیے معائنہ کریں۔",
+            "Schedule drip irrigation every 5 days." => "ہر 5 دن بعد ڈرپ آبپاشی کا شیڈول بنایں۔",
+            "Harvest pods when they turn yellow-brown." => "جب پھلیاں پیلی بھوری ہو جائیں تو کٹائی کریں۔",
+            "Apply DAP fertilizer at sowing time." => "بوائی کے وقت ڈی اے پی کھاد کا استعمال کریں۔",
+            "Watch for rust disease on leaves." => "پتوں پر کنگی کی بیماری (Rust) کا دھیان رکھیں۔",
+            "Ensure standing water depth of 5 cm." => "کھڑے پانی کی گہرائی 5 سینٹی میٹر یقینی بنائیں۔",
+            "Cut mature cane at ground level." => "پکی ہوئی گنے کی کٹائی زمین کے برابر کریں۔",
+            "Top-dress urea fertilizer before final irrigation." => "آخری آبپاشی سے پہلے یوریا کھاد ڈالیں۔",
+            "Spray fungicide to prevent late blight disease." => "پھپھوندی کش دوا سپرے کریں تاکہ پچھیتا جھلساؤ (Late Blight) بیماری سے بچا جا سکے۔",
+            "First irrigation 30-35 days after sowing." => "بوائی کے 30 سے 35 دن بعد پہلی آبپاشی کریں۔",
+            "Harvest maize when husks turn paper-like and grains are dry." => "مکئی کی کٹائی تب کریں جب چھلکے کاغذ جیسے ہو جائیں اور دانے خشک ہو جائیں۔",
+            "Apply nitrogenous fertilizer in three split doses." => "نائٹروجن والی کھاد تین الگ قسطوں میں ڈالیں۔",
+            "Use yellow sticky cards to capture whiteflies." => "سفید مکھیوں کو پکڑنے کے لیے پیلے رنگ کے چمٹیلے کارڈز استعمال کریں۔",
+            "Maintain water level during tillering stage." => "شگوفے بننے کے دوران پانی کی سطح برقرار رکھیں۔",
+            "Harvest when grain moisture content drops below 14%." => "کٹائی تب کریں جب دانوں میں نمی کا تناسب 14 فیصد سے کم ہو جائے۔",
+            "Apply compost and zinc sulfate around tree basins." => "درخت کے گرد کیاریوں میں نامیاتی کھاد اور زنک سلفیٹ ڈالیں۔",
+            "Spray against hopper insects during flowering stage." => "پھول آنے کے دوران ٹڈوں کے خلاف سپرے کریں۔",
+            "Irrigate lightly at flowering to prevent flower drop." => "پھول گرنے سے بچانے کے لیے پھول آنے کے مرحلے پر ہلکی آبپاشی کریں۔",
+            "Harvest onions when 50% of tops fall over." => "جب پیاز کے 50 فیصد پتے گر جائیں تو پیاز نکال لیں۔",
+            "Apply nitrogen-phosphorus compound fertilizer." => "نائٹروجن اور فاسفورس کی مخلوط کھاد ڈالیں۔",
+            "Treat seeds with suitable pesticide before sowing." => "بوائی سے پہلے بیجوں کو مناسب زہر لگائیں۔",
+            "Drip irrigation recommended to avoid root rot." => "جڑوں کی سڑن سے بچنے کے لیے ڈرپ آبپاشی کی سفارش کی جاتی ہے۔",
+            "Apply second dose of urea at jointing stage." => "فصل کے جوائنٹنگ مرحلے پر یوریا کی دوسری خوراک ڈالیں۔",
+            "Harvest when 80-85% of grains turn straw-colored." => "کٹائی تب کریں جب 80 سے 85 فیصد دانے سنہرے ہو جائیں۔",
+            "Inspect leaves for fall armyworm larvae." => "پتوں پر فال آرمی ورم کی سنڈیوں کا معائنہ کریں۔",
+            "Irrigate crop at 10-12 days interval in winter." => "سردیوں میں گنے کی فصل کو 10 سے 12 دن کے وقفے پر پانی دیں۔",
+            "Dehaulm potato crop 10 days before harvesting." => "آلو نکالنے سے 10 دن پہلے اس کے بیل پتے کاٹ لیں۔",
+            _ => desc
+        };
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
     }
 }

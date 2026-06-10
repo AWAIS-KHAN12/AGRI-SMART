@@ -1,0 +1,508 @@
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
+
+@* Floating Chatbot Container *@
+<div class="chatbot-container @(AppState.IsUrdu ? "urdu-chatbot" : "")" style="z-index: 1050;">
+    @* FAB Bubble *@
+    <button class="chatbot-fab @(_isOpen ? "hidden" : "active-pulse")" @onclick="Toggle" aria-label="Open Chatbot">
+        <span class="oi oi-chat chat-icon-fab"></span>
+        <span class="chatbot-badge"></span>
+    </button>
+
+    @* Chat Drawer / Window *@
+    <div class="chatbot-window @(_isOpen ? "open" : "") shadow-lg">
+        @* Header *@
+        <div class="chat-header bg-success text-white d-flex align-items-center justify-content-between p-3">
+            <div class="d-flex align-items-center">
+                <div class="chat-avatar me-2 bg-white text-success rounded-circle d-flex align-items-center justify-content-center">
+                    <span class="oi oi-person fw-bold"></span>
+                </div>
+                <div>
+                    <h6 class="m-0 fw-bold">@AppState.T("AgriSmart Dost", "زرعی دوست")</h6>
+                    <small class="online-indicator"><span class="dot bg-light-green"></span> @AppState.T("Online Advisor", "آن لائن مشیر")</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" @onclick="Toggle" aria-label="Close"></button>
+        </div>
+
+        @* Message Panel *@
+        <div class="chat-messages p-3" id="chatMessageList">
+            @foreach (var msg in _messages)
+            {
+                <div class="chat-bubble-row @(msg.IsBot ? "bot-row" : "user-row")">
+                    <div class="chat-bubble @(msg.IsBot ? "bot-bubble" : "user-bubble shadow-sm")">
+                        <p class="m-0">@msg.Text</p>
+                        <span class="chat-time">@msg.Timestamp.ToString("hh:mm tt")</span>
+                    </div>
+                </div>
+            }
+
+            @if (_isTyping)
+            {
+                <div class="chat-bubble-row bot-row">
+                    <div class="chat-bubble bot-bubble typing-bubble">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Suggestions Box *@
+        <div class="chat-suggestions px-3 py-2 border-top bg-light">
+            <div class="d-flex flex-wrap gap-1">
+                @foreach (var sug in GetSuggestions())
+                {
+                    <button type="button" class="btn btn-xs btn-outline-secondary btn-suggestion text-truncate" style="max-width:140px; font-size:0.75rem;" @onclick="() => SendSuggestion(sug)">
+                        @sug
+                    </button>
+                }
+            </div>
+        </div>
+
+        @* Footer Input Area *@
+        <div class="chat-footer p-2 border-top bg-white d-flex align-items-center">
+            <input type="text" class="form-control chat-input me-2" 
+                   placeholder='@AppState.T("Ask anything...", "کچھ پوچھیں...")'
+                   @bind="_userInput" @bind:event="oninput" 
+                   @onkeydown="HandleKeyDown" />
+            <button class="btn btn-success btn-send rounded-circle d-flex align-items-center justify-content-center" 
+                    @onclick="SendMessage" disabled="@(string.IsNullOrWhiteSpace(_userInput))">
+                <span class="oi oi-chevron-right text-white"></span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Chatbot General styling */
+    .chatbot-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .urdu-chatbot {
+        left: 20px;
+        right: auto;
+    }
+
+    /* FAB */
+    .chatbot-fab {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+        border: none;
+        box-shadow: 0 4px 16px rgba(46,125,50,0.4);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .chatbot-fab:hover {
+        transform: scale(1.08);
+    }
+
+    .chatbot-fab.hidden {
+        transform: scale(0);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .chat-icon-fab {
+        color: #fff;
+        font-size: 1.6rem;
+    }
+
+    .chatbot-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 12px;
+        height: 12px;
+        background: #ff5252;
+        border-radius: 50%;
+        border: 2px solid #fff;
+    }
+
+    .active-pulse {
+        animation: pulse-fab 2s infinite;
+    }
+
+    @@keyframes pulse-fab {
+        0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); }
+        70% { box-shadow: 0 0 0 15px rgba(46,125,50,0); }
+        100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); }
+    }
+
+    /* Chat window */
+    .chatbot-window {
+        width: 360px;
+        height: 500px;
+        background: #fff;
+        border-radius: 18px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        transform: translateY(600px) scale(0.8);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+    }
+
+    .urdu-chatbot .chatbot-window {
+        right: auto;
+        left: 0;
+    }
+
+    .chatbot-window.open {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .chat-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .online-indicator {
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.78);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .bg-light-green {
+        background: #69f0ae;
+    }
+
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    /* Message list area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .chat-bubble-row {
+        display: flex;
+        width: 100%;
+    }
+
+    .bot-row {
+        justify-content: flex-start;
+    }
+
+    .user-row {
+        justify-content: flex-end;
+    }
+
+    .chat-bubble {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 0.88rem;
+        line-height: 1.4;
+        position: relative;
+    }
+
+    .bot-bubble {
+        background: #fff;
+        color: #2c3e50;
+        border-bottom-left-radius: 2px;
+        border: 1px solid #e9ecef;
+    }
+
+    .user-bubble {
+        background: #2e7d32;
+        color: #fff;
+        border-bottom-right-radius: 2px;
+    }
+
+    .chat-time {
+        display: block;
+        font-size: 0.65rem;
+        margin-top: 4px;
+        text-align: right;
+        opacity: 0.6;
+    }
+
+    .chat-suggestions {
+        max-height: 70px;
+        overflow-y: auto;
+    }
+
+    .btn-suggestion {
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 20px;
+        color: #495057;
+        font-family: inherit;
+        transition: background-color 0.15s, color 0.15s;
+    }
+
+    .btn-suggestion:hover {
+        background: #2e7d32;
+        color: #fff;
+        border-color: #2e7d32;
+    }
+
+    /* Typing animation */
+    .typing-bubble {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 16px;
+    }
+
+    .typing-dot {
+        width: 6px;
+        height: 6px;
+        background: #8898aa;
+        border-radius: 50%;
+        animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @@keyframes typing {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+    }
+
+    .chat-input {
+        border-radius: 20px;
+        border: 1px solid #ced4da;
+        padding-left: 14px;
+        font-size: 0.88rem;
+    }
+
+    .chat-input:focus {
+        border-color: #2e7d32;
+        box-shadow: 0 0 0 2px rgba(46,125,50,0.15);
+    }
+
+    .btn-send {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        flex-shrink: 0;
+    }
+
+    /* Direction styling */
+    .urdu-chatbot .chat-bubble-row.user-row {
+        justify-content: flex-start;
+    }
+    .urdu-chatbot .chat-bubble-row.bot-row {
+        justify-content: flex-end;
+    }
+    .urdu-chatbot .chat-time {
+        text-align: left;
+    }
+    
+    @@media (max-width: 576px) {
+        .chatbot-window {
+            width: 290px;
+            height: 400px;
+            bottom: 60px;
+        }
+        .chatbot-container {
+            bottom: 70px;
+        }
+    }
+</style>
+
+@code {
+    private bool _isOpen = false;
+    private bool _isTyping = false;
+    private string _userInput = "";
+    private List<ChatMessage> _messages = new();
+
+    public class ChatMessage
+    {
+        public string Text { get; set; }
+        public bool IsBot { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+        ResetWelcomeMessage();
+    }
+
+    public void Toggle()
+    {
+        _isOpen = !_isOpen;
+        StateHasChanged();
+    }
+
+    private void ResetWelcomeMessage()
+    {
+        _messages.Clear();
+        _messages.Add(new ChatMessage
+        {
+            IsBot = true,
+            Timestamp = DateTime.Now,
+            Text = AppState.T(
+                "Assalam-o-Alaikum! I am your AgriSmart Advisor. How can I help you today? You can ask about wheat, cotton, rice, sugarcane, crop diseases, fertilizers, or weather tips.",
+                "السلام علیکم! میں آپ کا ایگری سمارٹ مشیر ہوں۔ آج میں آپ کی کیا مدد کر سکتا ہوں؟ آپ گندم، کپاس، چاول، گنے، فصلوں کی بیماریوں، کھادوں، یا موسم کے بارے میں پوچھ سکتے ہیں۔"
+            )
+        });
+    }
+
+    private List<string> GetSuggestions()
+    {
+        if (AppState.IsUrdu)
+        {
+            return new List<string> { "گندم کی کاشت", "کپاس کے کیڑے", "چاول کی پنیری", "کھادوں کی مقدار" };
+        }
+        else
+        {
+            return new List<string> { "Wheat Sowing", "Cotton Pests", "Rice Nursery", "Fertilizer Tips" };
+        }
+    }
+
+    private async Task SendSuggestion(string suggestText)
+    {
+        _userInput = suggestText;
+        await SendMessage();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_userInput))
+        {
+            await SendMessage();
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        var query = _userInput.Trim();
+        if (string.IsNullOrWhiteSpace(query)) return;
+
+        _userInput = "";
+        
+        // Add User Message
+        _messages.Add(new ChatMessage
+        {
+            IsBot = false,
+            Timestamp = DateTime.Now,
+            Text = query
+        });
+
+        _isTyping = true;
+        StateHasChanged();
+
+        // Simulate thinking delay
+        await Task.Delay(1000);
+
+        // Analyze and respond
+        var responseText = GenerateBotResponse(query);
+
+        _messages.Add(new ChatMessage
+        {
+            IsBot = true,
+            Timestamp = DateTime.Now,
+            Text = responseText
+        });
+
+        _isTyping = false;
+        StateHasChanged();
+    }
+
+    private string GenerateBotResponse(string query)
+    {
+        var lowerQuery = query.ToLowerInvariant();
+        bool isUrdu = AppState.IsUrdu;
+
+        // Wheat / گندم
+        if (lowerQuery.Contains("wheat") || lowerQuery.Contains("gandum") || lowerQuery.Contains("گندم"))
+        {
+            return isUrdu 
+                ? "پنجاب میں گندم کی کاشت کے لیے بہترین وقت 1 نومبر سے 30 نومبر ہے۔ بہترین اقسام میں اکبر-19، فیصل آباد-08، اور اناج-17 شامل ہیں۔ گندم کو 4 سے 5 پانی کی ضرورت ہوتی ہے، خاص طور پر جڑوں کی نشوونما اور شگوفے نکلنے کے دوران۔"
+                : "Wheat (Gandum) in Punjab is best sown from Nov 1 to Nov 30. High-yield varieties include Akbar-19 and Faisalabad-08. It requires 4 to 5 irrigations at critical stages: crown root initiation, tillering, booting, and milk stage.";
+        }
+
+        // Cotton / کپاس
+        if (lowerQuery.Contains("cotton") || lowerQuery.Contains("kapaas") || lowerQuery.Contains("کپاس"))
+        {
+            return isUrdu
+                ? "کپاس کی کاشت مئی میں شروع ہوتی ہے۔ سفید مکھی اور گلابی سنڈی اس کے بڑے دشمن ہیں۔ بوائی کے وقت ڈی اے پی اور آبپاشی کے ساتھ یوریا کھاد استعمال کریں۔ ہفتے میں دو بار کیڑوں کے معائنے (پیسٹ سکاؤٹنگ) کو یقینی بنائیں۔"
+                : "Cotton (Kapaas) sowing starts in May. Major pests are Whitefly and Bollworms. Use DAP during sowing and Urea in split doses. Ensure pest scouting twice a week.";
+        }
+
+        // Rice / چاول
+        if (lowerQuery.Contains("rice") || lowerQuery.Contains("chawal") || lowerQuery.Contains("چاول") || lowerQuery.Contains("دھان"))
+        {
+            return isUrdu
+                ? "چاول کی پنیری کی منتقلی جون اور جولائی میں کی جاتی ہے۔ پہلے 30 دن کھیت میں پانی کھڑا رکھنا ضروری ہے۔ چاول کے جھلساؤ (Rice Blast) کی بیماری کا دھیان رکھیں اور علامات ظاہر ہونے پر مناسب پھپھوندی کش دوا استعمال کریں۔"
+                : "Rice (Chawal) transplanting is done in June and July. Keep standing water in the field for the first 30 days. Watch out for Rice Blast disease; use recommended fungicides.";
+        }
+
+        // Sugarcane / گنا
+        if (lowerQuery.Contains("sugarcane") || lowerQuery.Contains("ganna") || lowerQuery.Contains("گنا"))
+        {
+            return isUrdu
+                ? "گنے کی بہاریہ کاشت فروری سے مارچ تک، جبکہ خریف کاشت ستمبر سے اکتوبر تک کی جاتی ہے۔ گنے کی اچھی پیداوار کے لیے زمین میں نامیاتی مادہ اور گہرا ہل چلانا ضروری ہے۔"
+                : "Sugarcane is planted in spring (Feb-Mar) or autumn (Sep-Oct). High yield requires deep plowing and well-drained organic soils with frequent light irrigations.";
+        }
+
+        // Fertilizers / کھاد
+        if (lowerQuery.Contains("fertilizer") || lowerQuery.Contains("fertilizers") || lowerQuery.Contains("dap") || lowerQuery.Contains("urea") || lowerQuery.Contains("کھاد"))
+        {
+            return isUrdu
+                ? "بہتر پیداوار کے لیے متوازن کھادیں استعمال کریں۔ عام طور پر فی ایکڑ بوائی کے وقت 1 بوری ڈی اے پی اور آدھی بوری یوریا، اور بعد کی آبپاشیوں میں 1.5 بوری یوریا کی سفارش کی جاتی ہے۔ مٹی کا ٹیسٹ بہترین گائیڈ ہے۔"
+                : "For high yield, use balanced fertilizers. Usually, 1 bag of DAP and half bag of Urea at sowing, and 1.5 bags of Urea during subsequent irrigations per acre is recommended. A soil test is highly recommended.";
+        }
+
+        // Weather / موسم / بارش
+        if (lowerQuery.Contains("weather") || lowerQuery.Contains("rain") || lowerQuery.Contains("temp") || lowerQuery.Contains("موسم") || lowerQuery.Contains("بارش"))
+        {
+            return isUrdu
+                ? "موسم کی درست صورتحال کے لیے ہمارا 'موسم' والا ٹیب چیک کریں۔ عام اصول: اگر اگلے 24 سے 48 گھنٹوں میں بارش کی پیش گوئی ہو تو کھاد ڈالنے اور آبپاشی سے گریز کریں۔"
+                : "Please check our Weather tab for real-time forecast. Generally, keep crop irrigation and fertilizer applications suspended if rainfall is predicted in the next 24-48 hours.";
+        }
+
+        // Hello / Greetings
+        if (lowerQuery.Contains("hello") || lowerQuery.Contains("hi") || lowerQuery.Contains("aoa") || lowerQuery.Contains("assalam") || lowerQuery.Contains("سلام") || lowerQuery.Contains("آؤ"))
+        {
+            return isUrdu
+                ? "وعلیکم السلام! میں آپ کا زرعی مشیر ہوں۔ آپ گندم، کپاس، چاول، گنے یا موسم کی معلومات کے بارے میں سوال پوچھ سکتے ہیں۔"
+                : "Hello! I am your AgriSmart Advisor. What crop are you growing today? You can ask about wheat, cotton, rice, sugarcane, or weather tips.";
+        }
+
+        // Default response
+        return isUrdu
+            ? "آپ کی بات مجھے پوری سمجھ نہیں آئی۔ میں گندم، کپاس، چاول، گنے، کھاد اور موسم کے بارے میں مشورہ دے سکتا ہوں۔ براہ کرم اپنا سوال ان موضوعات میں سے کسی ایک پر پوچھیں۔"
+            : "I'm here to help with crops (wheat, cotton, rice, sugarcane), fertilizers, pest control, and weather tips. Could you please specify your question?";
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

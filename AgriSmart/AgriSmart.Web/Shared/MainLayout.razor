@@ -1,9 +1,27 @@
 @inherits LayoutComponentBase
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
 
-<div>
+<div dir="@(AppState.IsUrdu ? "rtl" : "ltr")" class="@(AppState.IsUrdu ? "urdu-font" : "")">
     <nav class="navbar navbar-expand-md navbar-dark bg-success shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="/farmer/dashboard">AGRI-SMART</a>
+            <a class="navbar-brand fw-bold" href="/farmer/dashboard">@AppState.T("AGRI-SMART", "ایگری-سمارٹ")</a>
+            
+            <div class="d-flex align-items-center ms-auto me-2">
+                @if (AppState.CurrentLanguage == "en")
+                {
+                    <button class="btn btn-sm btn-outline-light px-2 py-1 fw-bold" style="font-size: 0.8rem; border-radius: 8px;" @onclick='() => AppState.SetLanguage("ur")'>
+                        اردو (Urdu)
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-outline-light px-2 py-1 fw-bold" style="font-size: 0.8rem; border-radius: 8px;" @onclick='() => AppState.SetLanguage("en")'>
+                        English
+                    </button>
+                }
+            </div>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -18,22 +36,59 @@
     </main>
 
     @* Mobile Bottom Nav *@
-    <nav class="fixed-bottom d-flex justify-content-around d-md-none bg-white border-top py-2 shadow-lg">
+    <nav class="fixed-bottom d-flex justify-content-around d-md-none bg-white border-top py-2 shadow-lg" style="z-index: 1000;">
         <a href="/farmer/dashboard" class="text-success text-decoration-none text-center">
             <span class="oi oi-home d-block mb-1"></span>
-            <small>Home</small>
+            <small>@AppState.T("Home", "گھر")</small>
         </a>
         <a href="/farmer/weather" class="text-success text-decoration-none text-center">
             <span class="oi oi-cloud d-block mb-1"></span>
-            <small>Weather</small>
+            <small>@AppState.T("Weather", "موسم")</small>
         </a>
+        
+        <button @onclick="ToggleChatbot" class="btn btn-link text-success text-decoration-none text-center p-0 border-0 shadow-none">
+            <span class="oi oi-chat d-block mb-1"></span>
+            <small>@AppState.T("Chatbot", "چیٹ بوٹ")</small>
+        </button>
+
         <a href="/farmer/crops" class="text-success text-decoration-none text-center">
             <span class="oi oi-sun d-block mb-1"></span>
-            <small>Crops</small>
+            <small>@AppState.T("Crops", "فصلیں")</small>
         </a>
         <a href="/farmer/advisory" class="text-success text-decoration-none text-center">
             <span class="oi oi-spreadsheet d-block mb-1"></span>
-            <small>Advisory</small>
+            <small>@AppState.T("Advisory", "مشورہ")</small>
         </a>
     </nav>
+
+    @* Float Chatbot Component *@
+    <Chatbot @ref="_chatbot" />
 </div>
+
+<style>
+    .urdu-font {
+        font-family: 'Noto Nastaliq Urdu', 'Poppins', sans-serif !important;
+    }
+    .urdu-font h1, .urdu-font h2, .urdu-font h3, .urdu-font h4, .urdu-font h5, .urdu-font h6 {
+        line-height: 1.8 !important;
+    }
+</style>
+
+@code {
+    private Chatbot _chatbot;
+
+    protected override void OnInitialized()
+    {
+        AppState.OnChange += StateHasChanged;
+    }
+
+    private void ToggleChatbot()
+    {
+        _chatbot?.Toggle();
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}

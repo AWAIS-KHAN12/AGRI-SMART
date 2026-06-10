@@ -1,67 +1,82 @@
 @page "/farmer/pests"
 @attribute [Authorize]
 @inject PestDiseaseService PestDiseaseService
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
 
-<h2 class="fs-4 fs-md-3 fw-bold mb-4">Pest &amp; Disease</h2>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">@AppState.T("Pest & Disease Diagnosis", "کیڑے اور بیماریاں")</h2>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger text-center mx-auto mb-4" role="alert" style="max-width: 800px;">
+        @_errorMessage
+    </div>
+}
 
 <div class="mx-auto" style="max-width: 800px;">
     <div class="input-group mb-4 shadow-sm">
         <span class="input-group-text bg-white border-end-0"><span class="oi oi-magnifying-glass text-muted"></span></span>
-        <input type="text" class="form-control border-start-0 ps-0" placeholder="Search pests or diseases..." @bind-value="_searchQuery" @bind-value:event="oninput" />
+        <input type="text" class="form-control border-start-0 ps-0" placeholder='@AppState.T("Search pests or diseases...", "کیڑوں یا بیماریوں کی تلاش کریں...")' value="@_searchQuery" @oninput="OnSearchInput" />
     </div>
 
-    @{
-        var filteredItems = PestDiseaseService.Search(_searchQuery);
-        var pests = filteredItems.Where(x => x.Type == "Pest").ToList();
-        var diseases = filteredItems.Where(x => x.Type == "Disease").ToList();
-    }
-
-    <h3 class="fs-5 fw-bold mb-3">Common Pests</h3>
-    @if (!pests.Any())
+    @if (_loading)
     {
-        <div class="alert alert-light text-muted fst-italic">No pests match your search.</div>
+        <div class="text-center p-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">@AppState.T("Searching...", "تلاش جاری ہے...")</p>
+        </div>
     }
     else
     {
-        <div class="row g-3 mb-4">
-            @foreach (var item in pests)
-            {
-                <div class="col-12 col-md-6">
-                    <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center" style="cursor: pointer;" @onclick="() => ShowDetail(item)">
-                        <img src="@item.ImagePath" alt="@item.Name" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;" />
-                        <div class="flex-fill">
-                            <div class="fw-bold text-dark fs-6 fs-md-5">@item.Name</div>
-                            <div class="text-muted small text-truncate" style="max-width: 200px;">@item.ShortDescription</div>
+        <h3 class="fs-5 fw-bold mb-3">@AppState.T("Common Pests", "عام کیڑے مکوڑے")</h3>
+        @if (!_pests.Any())
+        {
+            <div class="alert alert-light text-muted fst-italic">@AppState.T("No pests match your search.", "آپ کی تلاش کے مطابق کوئی کیڑے نہیں ملے۔")</div>
+        }
+        else
+        {
+            <div class="row g-3 mb-4">
+                @foreach (var item in _pests)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center" style="cursor: pointer;" @onclick="() => ShowDetail(item)">
+                            <img src="@item.ImagePath" alt="@item.Name" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;" />
+                            <div class="flex-fill">
+                                <div class="fw-bold text-dark fs-6 fs-md-5">@(AppState.IsUrdu ? TranslateName(item.Name) : item.Name)</div>
+                                <div class="text-muted small text-truncate" style="max-width: 200px;">@(AppState.IsUrdu ? TranslateShortDesc(item.ShortDescription) : item.ShortDescription)</div>
+                            </div>
+                            <span class="oi oi-chevron-right text-muted ms-2"></span>
                         </div>
-                        <span class="oi oi-chevron-right text-muted ms-2"></span>
                     </div>
-                </div>
-            }
-        </div>
-    }
+                }
+            </div>
+        }
 
-    <h3 class="fs-5 fw-bold mb-3">Common Diseases</h3>
-    @if (!diseases.Any())
-    {
-        <div class="alert alert-light text-muted fst-italic">No diseases match your search.</div>
-    }
-    else
-    {
-        <div class="row g-3 mb-4">
-            @foreach (var item in diseases)
-            {
-                <div class="col-12 col-md-6">
-                    <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center" style="cursor: pointer;" @onclick="() => ShowDetail(item)">
-                        <img src="@item.ImagePath" alt="@item.Name" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;" />
-                        <div class="flex-fill">
-                            <div class="fw-bold text-dark fs-6 fs-md-5">@item.Name</div>
-                            <div class="text-muted small text-truncate" style="max-width: 200px;">@item.ShortDescription</div>
+        <h3 class="fs-5 fw-bold mb-3">@AppState.T("Common Diseases", "عام بیماریاں")</h3>
+        @if (!_diseases.Any())
+        {
+            <div class="alert alert-light text-muted fst-italic">@AppState.T("No diseases match your search.", "آپ کی تلاش کے مطابق کوئی بیماریاں نہیں ملیں۔")</div>
+        }
+        else
+        {
+            <div class="row g-3 mb-4">
+                @foreach (var item in _diseases)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center" style="cursor: pointer;" @onclick="() => ShowDetail(item)">
+                            <img src="@item.ImagePath" alt="@item.Name" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;" />
+                            <div class="flex-fill">
+                                <div class="fw-bold text-dark fs-6 fs-md-5">@(AppState.IsUrdu ? TranslateName(item.Name) : item.Name)</div>
+                                <div class="text-muted small text-truncate" style="max-width: 200px;">@(AppState.IsUrdu ? TranslateShortDesc(item.ShortDescription) : item.ShortDescription)</div>
+                            </div>
+                            <span class="oi oi-chevron-right text-muted ms-2"></span>
                         </div>
-                        <span class="oi oi-chevron-right text-muted ms-2"></span>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
     }
 </div>
 
@@ -70,27 +85,27 @@
     <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-end" style="z-index: 1050;" @onclick="HideDetail">
         <div class="bg-white h-100 shadow d-flex flex-column" style="width: 100%; max-width: 400px;" @onclick:stopPropagation>
             <div class="bg-danger text-white p-3 d-flex justify-content-between align-items-center">
-                <h4 class="m-0 fs-5">@_selectedItem.Name (@_selectedItem.Type)</h4>
+                <h4 class="m-0 fs-5">@(AppState.IsUrdu ? TranslateName(_selectedItem.Name) : _selectedItem.Name) (@(_selectedItem.Type == "Pest" ? AppState.T("Pest", "کیڑا") : AppState.T("Disease", "بیماری")))</h4>
                 <button class="btn-close btn-close-white" aria-label="Close" @onclick="HideDetail"></button>
             </div>
             
             <div class="p-3 overflow-auto flex-fill">
                 <img src="@_selectedItem.ImagePath" alt="@_selectedItem.Name" class="w-100 rounded mb-3" style="height: 200px; object-fit: cover;" />
 
-                <h5 class="fw-bold text-danger fs-6">Overview</h5>
-                <p class="small text-dark mb-3">@_selectedItem.Description</p>
+                <h5 class="fw-bold text-danger fs-6">@AppState.T("Overview", "جائزہ")</h5>
+                <p class="small text-dark mb-3">@(AppState.IsUrdu ? TranslateDesc(_selectedItem.Description) : _selectedItem.Description)</p>
 
-                <h5 class="fw-bold text-danger fs-6">Symptoms</h5>
-                <p class="small text-dark mb-3">@_selectedItem.Symptoms</p>
+                <h5 class="fw-bold text-danger fs-6">@AppState.T("Symptoms", "علامات")</h5>
+                <p class="small text-dark mb-3">@(AppState.IsUrdu ? TranslateSymptoms(_selectedItem.Symptoms) : _selectedItem.Symptoms)</p>
 
-                <h5 class="fw-bold text-danger fs-6">Management &amp; Control</h5>
+                <h5 class="fw-bold text-danger fs-6">@AppState.T("Management & Control", "تدارک اور کنٹرول")</h5>
                 <div class="bg-light p-3 rounded border-start border-success border-4 small" style="white-space: pre-line;">
-                    @_selectedItem.ControlMeasures
+                    @(AppState.IsUrdu ? TranslateControl(_selectedItem.ControlMeasures) : _selectedItem.ControlMeasures)
                 </div>
             </div>
             
             <div class="p-3 border-top bg-light text-center">
-                <button class="btn btn-danger w-100 fw-bold" @onclick="HideDetail">Close Details</button>
+                <button class="btn btn-danger w-100 fw-bold" @onclick="HideDetail">@AppState.T("Close Details", "تفصیلات بند کریں")</button>
             </div>
         </div>
     </div>
@@ -99,14 +114,149 @@
 @code {
     private string _searchQuery = "";
     private PestDiseaseItem _selectedItem;
+    private bool _loading;
+    private string _errorMessage;
 
-    private void ShowDetail(PestDiseaseItem item)
+    private List<PestDiseaseItem> _pests = new List<PestDiseaseItem>();
+    private List<PestDiseaseItem> _diseases = new List<PestDiseaseItem>();
+
+    protected override async Task OnInitializedAsync()
     {
-        _selectedItem = item;
+        AppState.OnChange += StateHasChanged;
+        await PerformSearch();
     }
 
-    private void HideDetail()
+    private async Task OnSearchInput(ChangeEventArgs e)
     {
-        _selectedItem = null;
+        _searchQuery = e.Value?.ToString() ?? "";
+        await PerformSearch();
+    }
+
+    private async Task PerformSearch()
+    {
+        try
+        {
+            _loading = true;
+            _errorMessage = null;
+            await Task.Delay(150);
+
+            var filteredItems = PestDiseaseService.Search(_searchQuery) ?? new List<PestDiseaseItem>();
+            _pests = filteredItems.Where(x => x.Type == "Pest").ToList();
+            _diseases = filteredItems.Where(x => x.Type == "Disease").ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "An error occurred while searching: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShowDetail(PestDiseaseItem item)
+    {
+        try
+        {
+            _selectedItem = item;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to load details: " + ex.Message;
+        }
+        await Task.CompletedTask;
+    }
+
+    private async Task HideDetail()
+    {
+        try
+        {
+            _selectedItem = null;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to close details: " + ex.Message;
+        }
+        await Task.CompletedTask;
+    }
+
+    private string TranslateName(string name) => name switch {
+        "Caterpillar" => "سنڈی (Caterpillar)",
+        "Wireworm" => "وائر ورم (Wireworm)",
+        "Japanese Beetle" => "جاپانی بیٹل (Japanese Beetle)",
+        "Powdery Mildew" => "سفید پھپھوندی (Powdery Mildew)",
+        "Leaf Spot" => "پتوں کے دھبے (Leaf Spot)",
+        "Blast" => "بلاسٹ / جھلساؤ (Blast)",
+        _ => name
+    };
+
+    private string TranslateShortDesc(string desc) => desc switch {
+        "Hairy larvae that devour leaves." => "بالوں والی سنڈی جو پتوں کو کھا جاتی ہے۔",
+        "Root-feeding soil larvae." => "مٹی کے اندر جڑوں کو کھانے والی سنڈی۔",
+        "Beetles that skeletonize leaves." => "پتوں کو کھا کر صرف رگیں چھوڑنے والا بھونرا۔",
+        "White powdery fungal growth." => "پتوں پر سفید رنگ کی پاؤڈر جیسی پھپھوندی۔",
+        "Brown spots on leaves." => "پتوں پر بھورے رنگ کے دھبے۔",
+        "Affects leaves and grains." => "پتوں اور اناج کو نقصان پہنچانے والی بیماری۔",
+        _ => desc
+    };
+
+    private string TranslateDesc(string desc)
+    {
+        if (string.IsNullOrEmpty(desc)) return "";
+        if (desc.Contains("Caterpillars are the larval stage"))
+            return "سنڈیاں تتلیوں اور پروانوں کی ابتدائی شکل ہوتی ہیں۔ فصلوں میں پائی جانے والی بالوں یا کانٹوں دار اقسام بہت تباہ کن ہوتی ہیں۔ یہ نرم پتوں، تنوں اور شگوفوں کو کھا جاتی ہیں، جس سے سبزیوں اور پھلوں کی فصلوں کو تیزی سے اور وسیع پیمانے پر نقصان پہنچتا ہے۔";
+        if (desc.Contains("Wireworms are the larval stage"))
+            return "وائر ورمز کلک بیٹلز کے لاروا ہوتے ہیں۔ یہ سخت جسم والے، سنہرے مالٹائی رنگ کے سلنڈر نما کیڑے ہوتے ہیں جو 3 سے 5 سال تک مٹی میں رہتے ہیں اور پودوں کی جڑوں، بیجوں اور زیرِ زمین تنوں کو کھاتے ہیں، جس سے یہ زراعت کے خطرناک ترین زمینی کیڑوں میں شمار ہوتے ہیں۔";
+        if (desc.Contains("Japanese beetles"))
+            return "جاپانی بیٹل دھاتی سبز اور تانبے جیسے بھورے رنگ کے انتہائی تباہ کن حشرات ہیں۔ ان کے بالغ اور لاروا دونوں نقصان پہنچاتے ہیں — بالغ کیڑے پتوں کو کھاتے ہیں جبکہ لاروا (گروب) زمین کے نیچے گھاس اور پودوں کی جڑوں کو کھاتے ہیں۔";
+        if (desc.Contains("Powdery mildew is a common fungal disease"))
+            return "پاؤڈری مائلڈیو (سفید پھپھوندی) ایک عام فنگل بیماری ہے جو پتوں، تنوں اور پھولوں کو متاثر کرتی ہے۔ یہ گرم، خشک دنوں اور ٹھنڈی، نم راتوں میں پھیلتی ہے، جس سے پتوں پر سفید کوٹنگ بن جاتی ہے جو دھوپ کو روکتی ہے اور ضیائی تالیف (Photosynthesis) کو متاثر کرتی ہے۔";
+        if (desc.Contains("Leaf spot is caused by various fungal"))
+            return "لیف سپاٹ (پتوں کے دھبے) مختلف فنگل یا بیکٹیریل جراثیموں کی وجہ سے ہوتا ہے۔ یہ عام طور پر نیچے والے پتوں سے شروع ہوتا ہے جہاں ہوا کم اور نمی زیادہ ہوتی ہے، اور پتے پر مردہ دھبے بنتے ہیں جو پتے گرنے کا سبب بن سکتے ہیں۔";
+        if (desc.Contains("Blast (commonly Rice/Wheat Blast)"))
+            return "بلاسٹ (عام طور پر چاول/گندم کا جھلساؤ) ایک انتہائی تباہ کن فنگل بیماری ہے جو پائریکولیریا اورائزے نامی فنگس سے ہوتی ہے۔ یہ پودوں پر کسی بھی مرحلے پر حملہ کر سکتی ہے، جس سے اناج کی اہم فصلوں میں شدید نقصان ہوتا ہے۔";
+        return desc;
+    }
+
+    private string TranslateSymptoms(string sym)
+    {
+        if (string.IsNullOrEmpty(sym)) return "";
+        if (sym.Contains("Irregular holes"))
+            return "پتوں پر غیر معمولی سوراخ اور کٹے ہوئے کنارے، چھوٹے پودوں کے پتوں کا مکمل خاتمہ، پتے کی سطح پر بالوں والی ہری یا کالی سنڈیوں کی موجودگی، پتوں کے نیچے سیاہ فضلہ۔";
+        if (sym.Contains("Seedling wilting"))
+            return "پودوں کا مرجھانا اور مرنا، پودے کا قد چھوٹا رہنا، جڑوں اور آلوؤں کے اندر سوراخ اور سرنگیں بننا، بیجوں کا کم اگنا۔";
+        if (sym.Contains("Leaves with tissue eaten"))
+            return "پتوں کا جالیدار ہو جانا (رگیں بچ جانا)، خراب پھل اور پھول، لان میں پیلے اور بھورے پیچ بن جانا۔";
+        if (sym.Contains("White to grayish powdery spots"))
+            return "پتوں کی اوپری سطح پر سفید یا سرمئی رنگ کے پاؤڈر نما دھبے، پتوں کا مڑنا، نئی شاخوں کا خراب ہونا اور پتوں کا وقت سے پہلے پیلا ہو کر خشک ہو جانا۔";
+        if (sym.Contains("Circular, dark brown"))
+            return "پتوں پر گول، گہرے بھورے، کالے یا زرد ہالے والے دھبے، جو آپس میں مل کر بڑے مردہ پیچ بنا دیتے ہیں اور پتے گرنے لگتے ہیں۔";
+        if (sym.Contains("Spindle-shaped"))
+            return "پتوں پر آنکھ یا تکلے کی شکل کے دھبے جن کے کنارے بھورے یا سرخ اور درمیان سرمئی ہوتا ہے۔ متاثرہ تنہ ٹوٹ سکتا ہے (گردن کا جھلساؤ) جس سے منجی کے اندر دانے نہیں بنتے اور وہ سفید رہ جاتی ہے۔";
+        return sym;
+    }
+
+    private string TranslateControl(string ctrl)
+    {
+        if (string.IsNullOrEmpty(ctrl)) return "";
+        if (ctrl.Contains("Organic Control: Handpick and destroy larvae"))
+            return "نامیاتی کنٹرول: صبح سویرے سنڈیوں کو ہاتھ سے پکڑ کر تلف کریں۔ بی ٹی (Bt) کا سپرے کریں جو بہت مؤثر ہے۔ قدرتی شکاری حشرات جیسے طفیلی بھڑوں کو متعارف کروائیں۔\n\nکیمیائی کنٹرول: کلورپائریفوس، لیمبڈا-سائہیلوتھرین یا اسپنوساد جیسی زہروں کا سپرے کریں۔ پتوں کے نچلے حصے پر سپرے لازمی کریں جہاں سنڈیاں چھپتی ہیں۔";
+        if (ctrl.Contains("Organic Control: Deep-till soil"))
+            return "نامیاتی کنٹرول: بوائی سے پہلے گہرا ہل چلائیں تاکہ کیڑے پرندوں اور شکاریوں کے سامنے آ جائیں۔ فصلوں کا ردوبدل کریں تاکہ کیڑوں کا سائیکل ٹوٹ سکے۔\n\nکیمیائی کنٹرول: بوائی کے وقت کلورپائریفوس، ٹیفلوتھرین یا فپرونل بطور بیج ٹریٹمنٹ یا کھیل میں استعمال کریں۔";
+        if (ctrl.Contains("Organic Control: Handpick beetles"))
+            return "نامیاتی کنٹرول: صبح کے وقت سست بیٹلز کو ہاتھ سے چن کر مار دیں۔ بیٹل پھندے باغ سے دور لگائیں۔ مٹی میں ملکی سپور پاؤڈر ڈالیں تاکہ لاروا ختم ہو۔\n\nکیمیائی کنٹرول: بالغ بیٹلز کے لیے امیڈاکلوپرڈ یا کاربارل استعمال کریں۔ لاروا کے لیے ٹرائیکلورفون استعمال کریں۔";
+        if (ctrl.Contains("Organic Control: Spray with a baking soda"))
+            return "نامیاتی کنٹرول: بیکنگ سوڈا اور مائع صابن کا محلول سپرے کریں، سلفر پر مبنی نامیاتی زہریں استعمال کریں، ہوا کی آمدورفت کے لیے پودوں میں مناسب فاصلہ رکھیں، اور اوپر سے پانی دینے سے پرہیز کریں۔\n\nکیمیائی کنٹرول: علامات ظاہر ہوتے ہی مائیکلوبوٹانیل یا پینکونازول جیسی فنگس کش دوا استعمال کریں۔";
+        if (ctrl.Contains("Organic Control: Prune and destroy"))
+            return "نامیاتی کنٹرول: متاثرہ پتوں کو کاٹ کر جلا دیں، آبپاشی کے وقت پتوں کو گیلا کرنے سے گریز کریں، تانبے (کاپبر) پر مبنی فنگس کش ادویات استعمال کریں۔\n\nکیمیائی کنٹرول: کلوروتھالونل، مانکوزیب یا کاربینڈازیم پر مشتمل فنگس کش ادویات استعمال کریں۔";
+        if (ctrl.Contains("Organic Control: Cultivate resistant crop"))
+            return "نامیاتی کنٹرول: بیماری کے خلاف مزاحم اقسام کاشت کریں، نائٹروجن کھاد مناسب رکھیں، کٹائی کے بعد باقیات کو تلف کریں، اور کھیت میں مناسب پانی کھڑا رکھیں۔\n\nکیمیائی کنٹرول: بیج کا علاج کریں اور سٹا نکلنے کے وقت ٹرائی سائیکلازول یا ایزوکسیسٹروبن کا سپرے کریں۔";
+        return ctrl;
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
     }
 }

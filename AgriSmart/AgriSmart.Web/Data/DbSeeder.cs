@@ -64,6 +64,33 @@ namespace AgriSmart.Web.Data
                     await userManager.AddToRoleAsync(admin, "Admin");
             }
 
+            // ── Seed default farmer account ──────────────────────────────────────
+            var farmer = await userManager.FindByNameAsync("farmer");
+            if (farmer == null)
+            {
+                farmer = new ApplicationUser
+                {
+                    UserName = "farmer",
+                    Email = "farmer@agrismart.pk",
+                    FullName = "Demo Farmer",
+                    Region = "Punjab",
+                    EmailConfirmed = true,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+                var farmerResult = await userManager.CreateAsync(farmer, "Farmer@1234");
+                if (farmerResult.Succeeded)
+                    await userManager.AddToRoleAsync(farmer, "Farmer");
+            }
+            else
+            {
+                farmer.IsActive = true;
+                farmer.PasswordHash = userManager.PasswordHasher.HashPassword(farmer, "Farmer@1234");
+                await userManager.UpdateAsync(farmer);
+                if (!await userManager.IsInRoleAsync(farmer, "Farmer"))
+                    await userManager.AddToRoleAsync(farmer, "Farmer");
+            }
+
             logger.LogInformation("Database seeding completed ({Provider}).",
                 Startup.UseSqlServer ? "SQL Server" : "SQLite");
         }

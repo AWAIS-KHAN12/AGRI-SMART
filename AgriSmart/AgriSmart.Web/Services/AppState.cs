@@ -5,6 +5,8 @@ namespace AgriSmart.Web.Services
     public class AppState
     {
         public bool IsSidebarOpen { get; private set; }
+        
+        public string CurrentLanguage { get; set; } = "en";
 
         public event Action OnChange;
 
@@ -22,6 +24,22 @@ namespace AgriSmart.Web.Services
                 NotifyStateChanged();
             }
         }
+
+        public void SetLanguage(string lang)
+        {
+            if (lang == "en" || lang == "ur")
+            {
+                CurrentLanguage = lang;
+                NotifyStateChanged();
+            }
+        }
+
+        public string T(string en, string ur)
+        {
+            return CurrentLanguage == "ur" ? ur : en;
+        }
+
+        public bool IsUrdu => CurrentLanguage == "ur";
 
         private void NotifyStateChanged() => OnChange?.Invoke();
     }

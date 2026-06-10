@@ -2,108 +2,165 @@
 @attribute [Authorize]
 @inject UserManager<ApplicationUser> UserManager
 @inject IHttpContextAccessor HttpContextAccessor
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
 
-<div class="greeting mb-4">
-    <h2 class="fs-4 fs-md-3 fw-bold">@_greeting, @_userName!</h2>
-    <p class="text-muted fs-6 fs-md-5">Here's what's happening on your farm today.</p>
-</div>
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger text-center mx-auto mb-4" role="alert" style="max-width: 800px;">
+        @_errorMessage
+    </div>
+}
 
-@* Stats grid: 2x2 on mobile, 1x4 on desktop *@
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
-            <span class="text-primary mb-2"><span class="oi oi-cloud fs-3"></span></span>
-            <div class="fs-4 fw-bold">24°C</div>
-            <div class="text-muted fs-6">Current Temp</div>
+@if (_loading)
+{
+    <div class="text-center p-5">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">@AppState.T("Loading your dashboard...", "آپ کا ڈیش بورڈ لوڈ ہو رہا ہے...")</p>
+    </div>
+}
+else
+{
+    <div class="greeting mb-4">
+        <h2 class="fs-4 fs-md-3 fw-bold">@(AppState.IsUrdu ? _greetingUr : _greetingEn), @_userName!</h2>
+        <p class="text-muted fs-6 fs-md-5">@AppState.T("Here's what's happening on your farm today.", "آج آپ کے فارم کی صورتحال درج ذیل ہے۔")</p>
+    </div>
+
+    @* Stats grid: 2x2 on mobile, 1x4 on desktop *@
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+                <span class="text-primary mb-2"><span class="oi oi-cloud fs-3"></span></span>
+                <div class="fs-4 fw-bold">24°C</div>
+                <div class="text-muted fs-6" style="font-size:0.85rem;">@AppState.T("Current Temp", "موجودہ درجہ حرارت")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+                <span class="text-info mb-2"><span class="oi oi-droplet fs-3"></span></span>
+                <div class="fs-4 fw-bold">60%</div>
+                <div class="text-muted fs-6" style="font-size:0.85rem;">@AppState.T("Humidity", "نمی / رطوبت")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+                <span class="text-secondary mb-2"><span class="oi oi-loop-circular fs-3"></span></span>
+                <div class="fs-4 fw-bold">12 km/h</div>
+                <div class="text-muted fs-6" style="font-size:0.85rem;">@AppState.T("Wind Speed", "ہوا کی رفتار")</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
+                <span class="text-success mb-2"><span class="oi oi-circle-check fs-3"></span></span>
+                <div class="fs-4 fw-bold">@AppState.T("No Risk", "کوئی خطرہ نہیں")</div>
+                <div class="text-muted fs-6" style="font-size:0.85rem;">@AppState.T("Pest Risk", "کیڑوں کا خطرہ")</div>
+            </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
-            <span class="text-info mb-2"><span class="oi oi-droplet fs-3"></span></span>
-            <div class="fs-4 fw-bold">60%</div>
-            <div class="text-muted fs-6">Humidity</div>
+
+    <h3 class="fs-5 fw-bold mb-3">@AppState.T("Quick Links", "فوری لنکس")</h3>
+    <div class="row g-3">
+        <div class="col-12 col-md-6 col-lg-4">
+            <a href="/farmer/weather" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+                <span class="bg-light text-primary p-3 rounded-3 me-3"><span class="oi oi-cloud"></span></span>
+                <div>
+                    <div class="fw-bold fs-6 fs-md-5">@AppState.T("Weather Forecast", "موسم کی پیشن گوئی")</div>
+                    <div class="text-muted small">@AppState.T("View detailed weather updates", "موسم کی تفصیلی معلومات دیکھیں")</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <a href="/farmer/crops" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+                <span class="bg-light text-warning p-3 rounded-3 me-3"><span class="oi oi-sun"></span></span>
+                <div>
+                    <div class="fw-bold fs-6 fs-md-5">@AppState.T("Crop Recommendation", "فصلوں کی سفارشات")</div>
+                    <div class="text-muted small">@AppState.T("Best crops for your region", "اپنے علاقے کے لیے بہترین فصلیں تلاش کریں")</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <a href="/farmer/pests" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+                <span class="bg-light text-danger p-3 rounded-3 me-3"><span class="oi oi-bug"></span></span>
+                <div>
+                    <div class="fw-bold fs-6 fs-md-5">@AppState.T("Pest & Disease Info", "کیڑے اور بیماریاں")</div>
+                    <div class="text-muted small">@AppState.T("Identify and manage threats", "کیڑوں اور بیماریوں کا سدِباب کریں")</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <a href="/farmer/advisory" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
+                <span class="bg-light text-success p-3 rounded-3 me-3"><span class="oi oi-clock"></span></span>
+                <div>
+                    <div class="fw-bold fs-6 fs-md-5">@AppState.T("Advisory History", "زرعی مشورہ")</div>
+                    <div class="text-muted small">@AppState.T("View past advisory and tips", "ماضی کے مشورے اور مفید معلومات دیکھیں")</div>
+                </div>
+            </a>
         </div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
-            <span class="text-secondary mb-2"><span class="oi oi-loop-circular fs-3"></span></span>
-            <div class="fs-4 fw-bold">12 km/h</div>
-            <div class="text-muted fs-6">Wind Speed</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card p-3 p-md-4 shadow-sm border-0 h-100 text-center">
-            <span class="text-success mb-2"><span class="oi oi-circle-check fs-3"></span></span>
-            <div class="fs-4 fw-bold">No Risk</div>
-            <div class="text-muted fs-6">Pest Risk</div>
-        </div>
-    </div>
-</div>
-
-<h3 class="fs-5 fw-bold mb-3">Quick Links</h3>
-<div class="row g-3">
-    <div class="col-12 col-md-6 col-lg-4">
-        <a href="/farmer/weather" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
-            <span class="bg-light text-primary p-3 rounded-3 me-3"><span class="oi oi-cloud"></span></span>
-            <div>
-                <div class="fw-bold fs-6 fs-md-5">Weather Forecast</div>
-                <div class="text-muted small">View detailed weather updates</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-        <a href="/farmer/crops" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
-            <span class="bg-light text-warning p-3 rounded-3 me-3"><span class="oi oi-sun"></span></span>
-            <div>
-                <div class="fw-bold fs-6 fs-md-5">Crop Recommendation</div>
-                <div class="text-muted small">Best crops for your region</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-        <a href="/farmer/pests" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
-            <span class="bg-light text-danger p-3 rounded-3 me-3"><span class="oi oi-bug"></span></span>
-            <div>
-                <div class="fw-bold fs-6 fs-md-5">Pest &amp; Disease Info</div>
-                <div class="text-muted small">Identify and manage threats</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-4">
-        <a href="/farmer/advisory" class="card p-3 p-md-4 shadow-sm border-0 text-decoration-none text-dark h-100 d-flex flex-row align-items-center">
-            <span class="bg-light text-success p-3 rounded-3 me-3"><span class="oi oi-clock"></span></span>
-            <div>
-                <div class="fw-bold fs-6 fs-md-5">Advisory History</div>
-                <div class="text-muted small">View past advisory and tips</div>
-            </div>
-        </a>
-    </div>
-</div>
+}
 
 @code {
     private string _userName = "Farmer";
-    private string _greeting = "Good Morning";
+    private string _greetingEn = "Good Morning";
+    private string _greetingUr = "صبح بخیر";
+    private bool _loading = true;
+    private string _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        // Determine greeting based on local hour
-        var hour = DateTime.Now.Hour;
-        if (hour < 12) _greeting = "Good Morning";
-        else if (hour < 17) _greeting = "Good Afternoon";
-        else _greeting = "Good Evening";
-
-        // Try to get the logged-in user's name
-        var httpContext = HttpContextAccessor.HttpContext;
-        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        AppState.OnChange += StateHasChanged;
+        try
         {
-            var user = await UserManager.GetUserAsync(httpContext.User);
-            if (user != null && !string.IsNullOrWhiteSpace(user.FullName))
+            _loading = true;
+            _errorMessage = null;
+
+            // Determine greeting based on local hour
+            var hour = DateTime.Now.Hour;
+            if (hour < 12)
             {
-                _userName = user.FullName.Split(' ')[0]; // First name only
+                _greetingEn = "Good Morning";
+                _greetingUr = "صبح بخیر";
+            }
+            else if (hour < 17)
+            {
+                _greetingEn = "Good Afternoon";
+                _greetingUr = "دوپہر بخیر";
+            }
+            else
+            {
+                _greetingEn = "Good Evening";
+                _greetingUr = "شام بخیر";
+            }
+
+            // Try to get the logged-in user's name
+            var httpContext = HttpContextAccessor.HttpContext;
+            if (httpContext?.User?.Identity?.IsAuthenticated == true)
+            {
+                var user = await UserManager.GetUserAsync(httpContext.User);
+                if (user != null && !string.IsNullOrWhiteSpace(user.FullName))
+                {
+                    _userName = user.FullName.Split(' ')[0]; // First name only
+                }
             }
         }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to load dashboard: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
     }
 }

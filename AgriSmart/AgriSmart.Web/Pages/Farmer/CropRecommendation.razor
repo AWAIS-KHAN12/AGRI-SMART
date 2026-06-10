@@ -1,71 +1,92 @@
 @page "/farmer/crops"
 @attribute [Authorize]
 @inject AgriSmart.Web.Services.CropRecommendationService CropService
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
 
-<h2 class="fs-4 fs-md-3 fw-bold mb-4">Crop Recommendation</h2>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">@AppState.T("Crop Recommendation", "فصلوں کی سفارشات")</h2>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger mx-auto text-center mb-4" role="alert" style="max-width: 600px;">
+        @_errorMessage
+    </div>
+}
 
 <div class="card p-3 p-md-4 mb-4 shadow-sm border-0 mx-auto" style="max-width: 600px;">
     <div class="mb-3">
-        <label class="form-label fw-bold">Region</label>
-        <select class="form-select w-100" @bind="_selectedRegion">
+        <label class="form-label fw-bold">@AppState.T("Region", "علاقہ")</label>
+        <select class="form-select w-100" value="@_selectedRegion" @onchange="OnRegionChanged">
             @foreach (var p in Helpers.PakistanData.Provinces)
             {
-                <option value="@p">@p</option>
+                <option value="@p">@(AppState.IsUrdu ? TranslateRegion(p) : p)</option>
             }
         </select>
     </div>
 
     <div class="mb-3">
-        <label class="form-label fw-bold">Season</label>
-        <select class="form-select w-100" @bind="_selectedSeason">
+        <label class="form-label fw-bold">@AppState.T("Season", "سیزن")</label>
+        <select class="form-select w-100" value="@_selectedSeason" @onchange="OnSeasonChanged">
             @foreach (var s in Helpers.PakistanData.Seasons)
             {
-                <option value="@s">@s</option>
+                <option value="@s">@(AppState.IsUrdu ? TranslateSeason(s) : s)</option>
             }
         </select>
     </div>
 
     <div class="mb-4">
-        <label class="form-label fw-bold">Soil Type</label>
-        <select class="form-select w-100" @bind="_selectedSoil">
+        <label class="form-label fw-bold">@AppState.T("Soil Type", "مٹی کی قسم")</label>
+        <select class="form-select w-100" value="@_selectedSoil" @onchange="OnSoilChanged">
             @foreach (var t in Helpers.PakistanData.SoilTypes)
             {
-                <option value="@t">@t</option>
+                <option value="@t">@(AppState.IsUrdu ? TranslateSoil(t) : t)</option>
             }
         </select>
     </div>
 
-    <button class="btn btn-success w-100 py-2 fw-bold" @onclick="Search">Get Recommendations</button>
+    <button class="btn btn-success w-100 py-2 fw-bold" @onclick="Search">@AppState.T("Get Recommendations", "سفارشات حاصل کریں")</button>
 </div>
 
-@if (_results != null && _results.Count > 0)
+@if (_loading)
 {
-    <h3 class="fs-5 fw-bold mb-3">Recommended Crops</h3>
-    <div class="row g-3">
-        @foreach (var crop in _results)
-        {
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center">
-                    <span class="bg-light text-success p-3 rounded-3 me-3">
-                        <span class="oi @crop.IconClass fs-4"></span>
-                    </span>
-                    <div>
-                        <div class="fw-bold fs-6 fs-md-5">@crop.Name</div>
-                        <span class="badge @(crop.Suitability == "High" ? "bg-success" : "bg-warning text-dark") mb-1">
-                            @crop.Suitability Suitability
-                        </span>
-                        <div class="text-muted small">Duration: @crop.Duration</div>
-                    </div>
-                </div>
-            </div>
-        }
+    <div class="text-center p-4">
+        <div class="spinner-border text-success mx-auto" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted mb-0">@AppState.T("Finding recommended crops...", "سفارش کردہ فصلیں تلاش کی جا رہی ہیں...")</p>
     </div>
 }
-else if (_searched)
+else
 {
-    <div class="alert alert-secondary text-center mx-auto" style="max-width: 600px;">
-        No crops found for the selected criteria. Try different filters.
-    </div>
+    @if (_results != null && _results.Count > 0)
+    {
+        <h3 class="fs-5 fw-bold mb-3">@AppState.T("Recommended Crops", "سفارش کردہ فصلیں")</h3>
+        <div class="row g-3">
+            @foreach (var crop in _results)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card p-3 shadow-sm border-0 h-100 d-flex flex-row align-items-center">
+                        <span class="bg-light text-success p-3 rounded-3 me-3">
+                            <span class="oi @crop.IconClass fs-4"></span>
+                        </span>
+                        <div>
+                            <div class="fw-bold fs-6 fs-md-5">@(AppState.IsUrdu ? TranslateCropName(crop.Name) : crop.Name)</div>
+                            <span class="badge @(crop.Suitability == "High" ? "bg-success" : "bg-warning text-dark") mb-1">
+                                @(crop.Suitability == "High" ? AppState.T("High Suitability", "بہت مناسب") : AppState.T("Medium Suitability", "درمیانہ مناسب"))
+                            </span>
+                            <div class="text-muted small">@AppState.T("Duration", "مدت / وقت"): @TranslateDuration(crop.Duration)</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (_searched)
+    {
+        <div class="alert alert-secondary text-center mx-auto" style="max-width: 600px;">
+            @AppState.T("No crops found for the selected criteria. Try different filters.", "منتخب کردہ معیار کے لیے کوئی فصل نہیں ملی۔ مختلف فلٹرز آزمائیں۔")
+        </div>
+    }
 }
 
 @code {
@@ -73,11 +94,112 @@ else if (_searched)
     private string _selectedSeason = "Kharif";
     private string _selectedSoil = "Loamy";
     private bool _searched;
+    private bool _loading;
+    private string _errorMessage;
     private List<AgriSmart.Web.Models.CropRecommendation> _results;
 
-    private void Search()
+    protected override async Task OnInitializedAsync()
     {
-        _results = CropService.GetRecommendations(_selectedRegion, _selectedSeason, _selectedSoil);
-        _searched = true;
+        AppState.OnChange += StateHasChanged;
+        await Search();
+    }
+
+    private async Task OnRegionChanged(ChangeEventArgs e)
+    {
+        _selectedRegion = e.Value?.ToString();
+        await Search();
+    }
+
+    private async Task OnSeasonChanged(ChangeEventArgs e)
+    {
+        _selectedSeason = e.Value?.ToString();
+        await Search();
+    }
+
+    private async Task OnSoilChanged(ChangeEventArgs e)
+    {
+        _selectedSoil = e.Value?.ToString();
+        await Search();
+    }
+
+    private async Task Search()
+    {
+        try
+        {
+            _loading = true;
+            _errorMessage = null;
+            await Task.Delay(200); // Simulate network load
+            _results = CropService.GetRecommendations(_selectedRegion, _selectedSeason, _selectedSoil);
+            _searched = true;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to load recommendations: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string TranslateRegion(string r) => r switch {
+        "Punjab" => "پنجاب",
+        "Sindh" => "سندھ",
+        "Khyber Pakhtunkhwa" or "KPK" => "خیبر پختونخوا",
+        "Balochistan" => "بلوچستان",
+        "ICT" => "اسلام آباد (ICT)",
+        "AJK" => "آزاد کشمیر (AJK)",
+        "GB" => "گلگت بلتستان (GB)",
+        _ => r
+    };
+
+    private string TranslateSeason(string s) => s switch {
+        "Kharif" => "خریف (گرمیوں کی فصلیں)",
+        "Rabi" => "ربیع (سردیوں کی فصلیں)",
+        "Year-Round" => "سارا سال (Year-Round)",
+        _ => s
+    };
+
+    private string TranslateSoil(string s) => s switch {
+        "Loamy" => "زرخیز مٹی (Loamy)",
+        "Sandy" => "ریتلی مٹی (Sandy)",
+        "Clay" or "Clayey" => "چکنی مٹی (Clay)",
+        "Silt" => "بھل والی مٹی (Silt)",
+        _ => s
+    };
+
+    private string TranslateCropName(string name) => name switch {
+        "Wheat" => "گندم",
+        "Cotton" => "کپاس",
+        "Rice" => "چاول / دھان",
+        "Sugarcane" => "گنا",
+        "Maize" => "مکئی",
+        "Potato" => "آلو",
+        "Soybean" => "سویا بین",
+        "Millet" => "باجرہ",
+        "Sorghum" => "جوار",
+        "Sesame" => "تل",
+        "Barley" => "جو",
+        "Chickpea" or "Gram" => "چنا",
+        "Lentil" => "مسور",
+        "Mustard" => "سرسوں",
+        "Onion" => "پیاز",
+        "Tomato" => "ٹماٹر",
+        "Chili" or "Chilli" => "مرچ",
+        "Spinach" => "پالک",
+        "Carrot" => "گاجر",
+        _ => name
+    };
+
+    private string TranslateDuration(string dur)
+    {
+        if (string.IsNullOrEmpty(dur)) return "";
+        return dur.Replace("days", "دن").Replace("Months", "مہینے").Replace("months", "مہینے");
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
     }
 }

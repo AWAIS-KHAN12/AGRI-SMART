@@ -1,13 +1,22 @@
 @page "/farmer/weather"
 @attribute [Authorize]
 @inject WeatherService WeatherService
+@inject AgriSmart.Web.Services.AppState AppState
+@implements IDisposable
 
-<h2 class="fs-4 fs-md-3 fw-bold mb-4">Weather Forecast</h2>
+<h2 class="fs-4 fs-md-3 fw-bold mb-4">@AppState.T("Weather Forecast", "موسم کی پیشن گوئی")</h2>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger text-center mx-auto mb-4" role="alert" style="max-width: 600px;">
+        @_errorMessage
+    </div>
+}
 
 <div class="row mb-4">
     <div class="col-12 col-md-6 col-lg-4 mx-auto mx-md-0">
-        <label for="city-select" class="form-label fw-bold">Select Location</label>
-        <select id="city-select" class="form-select" @bind="_selectedCity">
+        <label for="city-select" class="form-label fw-bold">@AppState.T("Select Location", "مقام منتخب کریں")</label>
+        <select id="city-select" class="form-select" value="@_selectedCity" @onchange="OnCityChanged">
             @foreach (var city in PakistanData.Cities)
             {
                 <option value="@city">@city</option>
@@ -16,13 +25,13 @@
     </div>
 </div>
 
-@if (_weatherData == null)
+@if (_loading || _weatherData == null)
 {
     <div class="text-center p-5">
-        <div class="spinner-border text-primary" role="status">
+        <div class="spinner-border text-success" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-3 text-muted">Loading weather data...</p>
+        <p class="mt-3 text-muted">@AppState.T("Loading weather data...", "موسم کا ڈیٹا لوڈ ہو رہا ہے...")</p>
     </div>
 }
 else
@@ -30,8 +39,8 @@ else
     <div class="card p-3 p-md-4 mb-4 shadow-sm border-0">
         <div class="d-flex justify-content-between align-items-start mb-4">
             <div>
-                <h3 class="fs-4 fw-bold mb-1"><span class="oi oi-location text-primary me-2"></span>@_weatherData.City, @_weatherData.Province</h3>
-                <div class="text-muted fs-6">Today, @_currentDate</div>
+                <h3 class="fs-4 fw-bold mb-1"><span class="oi oi-location text-primary me-2"></span>@_weatherData.City, @TranslateProvince(_weatherData.Province)</h3>
+                <div class="text-muted fs-6">@AppState.T("Today", "آج"), @_currentDate</div>
             </div>
         </div>
 
@@ -39,7 +48,7 @@ else
             <span class="oi @GetWeatherIconClass(_weatherData.Condition) text-warning" style="font-size: 5rem;"></span>
             <div>
                 <div class="display-3 fw-bold">@_weatherData.Temperature°C</div>
-                <div class="fs-5 text-muted">@_weatherData.Condition</div>
+                <div class="fs-5 text-muted">@AppState.T(_weatherData.Condition, TranslateCondition(_weatherData.Condition))</div>
             </div>
         </div>
 
@@ -48,27 +57,27 @@ else
                 <div class="bg-light rounded p-3 h-100">
                     <span class="oi oi-droplet text-info fs-4 mb-2 d-block"></span>
                     <div class="fw-bold fs-5">@_weatherData.Humidity%</div>
-                    <div class="text-muted small">Humidity</div>
+                    <div class="text-muted small" style="font-size: 0.78rem;">@AppState.T("Humidity", "نمی / رطوبت")</div>
                 </div>
             </div>
             <div class="col-4">
                 <div class="bg-light rounded p-3 h-100">
                     <span class="oi oi-loop-circular text-success fs-4 mb-2 d-block"></span>
                     <div class="fw-bold fs-5">@_weatherData.WindSpeed km/h</div>
-                    <div class="text-muted small">Wind</div>
+                    <div class="text-muted small" style="font-size: 0.78rem;">@AppState.T("Wind", "ہوا کی رفتار")</div>
                 </div>
             </div>
             <div class="col-4">
                 <div class="bg-light rounded p-3 h-100">
                     <span class="oi oi-dashboard text-secondary fs-4 mb-2 d-block"></span>
                     <div class="fw-bold fs-5">@_weatherData.Pressure hPa</div>
-                    <div class="text-muted small">Pressure</div>
+                    <div class="text-muted small" style="font-size: 0.78rem;">@AppState.T("Pressure", "ہوا کا دباؤ")</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <h3 class="fs-5 fw-bold mb-3">Today's Forecast</h3>
+    <h3 class="fs-5 fw-bold mb-3">@AppState.T("Today's Forecast", "آج کی پیشن گوئی")</h3>
     <div class="d-flex overflow-auto pb-3 mb-4 gap-3" style="scrollbar-width: thin;">
         @foreach (var forecast in _weatherData.HourlyForecasts)
         {
@@ -80,13 +89,13 @@ else
         }
     </div>
 
-    <h3 class="fs-5 fw-bold mb-3">5 Day Forecast</h3>
+    <h3 class="fs-5 fw-bold mb-3">@AppState.T("5 Day Forecast", "5 دن کی پیشن گوئی")</h3>
     <div class="card shadow-sm border-0 mb-4">
         <ul class="list-group list-group-flush">
             @foreach (var dayForecast in _weatherData.DailyForecasts)
             {
                 <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
-                    <div class="fw-bold flex-fill">@dayForecast.Day</div>
+                    <div class="fw-bold flex-fill">@TranslateDay(dayForecast.Day)</div>
                     <div class="flex-fill text-center">
                         <span class="oi @dayForecast.IconClass text-warning fs-5"></span>
                     </div>
@@ -101,54 +110,41 @@ else
 
 @code {
     private string _selectedCity = "Islamabad";
-    private string _previousCity = "Islamabad";
     private string _currentDate = "";
     private WeatherData _weatherData;
+    private bool _loading;
+    private string _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
+        AppState.OnChange += StateHasChanged;
         _currentDate = DateTime.Now.ToString("dd MMM yyyy");
         await LoadWeatherAsync();
     }
 
-    protected override async Task OnParametersSetAsync()
+    private async Task OnCityChanged(ChangeEventArgs e)
     {
-        if (_selectedCity != _previousCity)
-        {
-            _previousCity = _selectedCity;
-            await LoadWeatherAsync();
-        }
-    }
-
-    private string SelectedCity
-    {
-        get => _selectedCity;
-        set
-        {
-            if (_selectedCity != value)
-            {
-                _selectedCity = value;
-                InvokeAsync(async () => {
-                    await LoadWeatherAsync();
-                    StateHasChanged();
-                });
-            }
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_selectedCity != _previousCity)
-        {
-            _previousCity = _selectedCity;
-            await LoadWeatherAsync();
-            StateHasChanged();
-        }
+        _selectedCity = e.Value?.ToString() ?? "Islamabad";
+        await LoadWeatherAsync();
     }
 
     private async Task LoadWeatherAsync()
     {
-        _weatherData = await WeatherService.GetWeatherAsync(_selectedCity);
+        try
+        {
+            _loading = true;
+            _errorMessage = null;
+            _weatherData = await WeatherService.GetWeatherAsync(_selectedCity);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to load weather forecast: " + ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
     }
 
     private string GetWeatherIconClass(string condition)
@@ -163,5 +159,56 @@ else
             var c when c.Contains("snow") => "oi-bolt",
             _ => "oi-sun"
         };
+    }
+
+    private string TranslateCondition(string condition)
+    {
+        if (string.IsNullOrWhiteSpace(condition)) return "";
+        return condition.ToLower() switch
+        {
+            var c when c.Contains("sun") || c.Contains("clear") => "صاف اور دھوپ",
+            var c when c.Contains("partly") => "جزوی ابر آلود",
+            var c when c.Contains("cloud") => "ابر آلود",
+            var c when c.Contains("rain") || c.Contains("drizzle") || c.Contains("shower") => "بارش",
+            var c when c.Contains("snow") || c.Contains("storm") => "طوفانی بارش",
+            _ => condition
+        };
+    }
+
+    private string TranslateProvince(string province)
+    {
+        if (string.IsNullOrWhiteSpace(province)) return "";
+        return province.ToLower() switch
+        {
+            "punjab" => "پنجاب",
+            "sindh" => "سندھ",
+            "khyber pakhtunkhwa" or "kpk" => "خیبر پختونخوا",
+            "balochistan" => "بلوچستان",
+            "gilgit baltistan" => "گلگت بلتستان",
+            "azad kashmir" => "آزاد کشمیر",
+            "islamabad capital territory" or "islamabad" => "اسلام آباد",
+            _ => province
+        };
+    }
+
+    private string TranslateDay(string day)
+    {
+        if (string.IsNullOrWhiteSpace(day)) return "";
+        return day.ToLower() switch
+        {
+            "monday" => "پیر",
+            "tuesday" => "منگل",
+            "wednesday" => "بدھ",
+            "thursday" => "جمعرات",
+            "friday" => "جمعہ",
+            "saturday" => "ہفتہ",
+            "sunday" => "اتوار",
+            _ => day
+        };
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
     }
 }

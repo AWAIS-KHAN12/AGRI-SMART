@@ -21,52 +21,42 @@ namespace AgriSmart.Web.Pages.Account
         [BindProperty]
         public InputModel Input { get; set; }
 
+        [BindProperty]
+        public string SocialProvider { get; set; }
+
         public string ErrorMessage { get; set; }
+        public string SuccessMessage { get; set; }
 
         public void OnGet() { }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
-                return Page();
-
-            // Intercept simulated social login requests
-            if (Input.Username == "google_user" || Input.Username == "facebook_user")
+            // ── Social login shortcut ────────────────────────────────────────────
+            if (!string.IsNullOrEmpty(SocialProvider) &&
+                (SocialProvider == "Google" || SocialProvider == "Facebook"))
             {
-                var socialUser = await _userManager.FindByNameAsync(Input.Username);
-                if (socialUser == null)
-                {
-                    socialUser = new ApplicationUser
-                    {
-                        UserName = Input.Username,
-                        Email = Input.Username + "@agrismart.pk",
-                        FullName = Input.Username == "google_user" ? "Google User" : "Facebook User",
-                        Region = "Punjab",
-                        EmailConfirmed = true,
-                        IsActive = true
-                    };
-                    var createResult = await _userManager.CreateAsync(socialUser, "OAuth@1234");
-                    if (createResult.Succeeded)
-                    {
-                        await _userManager.AddToRoleAsync(socialUser, "Farmer");
-                    }
-                    else
-                    {
-                        ErrorMessage = "Failed to create simulated social user.";
-                        return Page();
-                    }
-                }
+                return await HandleSocialLoginAsync(SocialProvider);
+            }
 
-                await _signInManager.SignInAsync(socialUser, isPersistent: false);
-                return Redirect("/farmer/dashboard");
+            // ── Standard username/email + password login ─────────────────────────
+            if (Input == null || string.IsNullOrWhiteSpace(Input.Username) || string.IsNullOrWhiteSpace(Input.Password))
+            {
+                ErrorMessage = "Please enter your email/username and password.";
+                return Page();
             }
 
             var user = await _userManager.FindByNameAsync(Input.Username)
                 ?? await _userManager.FindByEmailAsync(Input.Username);
 
-            if (user == null || !user.IsActive)
+            if (user == null)
             {
-                ErrorMessage = "Invalid login attempt.";
+                ErrorMessage = "No account found with those credentials. Please check and try again.";
+                return Page();
+            }
+
+            if (!user.IsActive)
+            {
+                ErrorMessage = "Your account has been deactivated. Please contact support.";
                 return Page();
             }
 
@@ -77,24 +67,79 @@ namespace AgriSmart.Web.Pages.Account
             {
                 if (await _userManager.IsInRoleAsync(user, "Admin"))
                     return Redirect("/admin/panel");
+
                 return Redirect("/farmer/dashboard");
             }
 
             if (result.IsLockedOut)
-                ErrorMessage = "Account locked. Try again in 10 minutes.";
+                ErrorMessage = "Account temporarily locked after too many failed attempts. Try again in 10 minutes.";
             else
-                ErrorMessage = "Invalid login attempt.";
+                ErrorMessage = "Incorrect password. Please try again or use 'Forgot password'.";
 
             return Page();
         }
 
+        // ── Social login handler ─────────────────────────────────────────────────
+        private async Task<IActionResult> HandleSocialLoginAsync(string provider)
+        {
+            var username = provider == "Google" ? "google_user" : "facebook_user";
+            var displayName = provider == "Google" ? "Google User" : "Facebook User";
+
+            var socialUser = await _userManager.FindByNameAsync(username);
+
+            if (socialUser == null)
+            {
+                socialUser = new ApplicationUser
+                {
+                    UserName = username,
+                    Email = username + "@agrismart.pk",
+                    FullName = displayName,
+                    Region = "Punjab",
+                    EmailConfirmed = true,
+                    IsActive = true
+                };
+
+                var createResult = await _userManager.CreateAsync(socialUser, "OAuth@1234");
+
+                if (!createResult.Succeeded)
+                {
+                    // User might already exist with a slightly different state; try to find again
+                    socialUser = await _userManager.FindByEmailAsync(username + "@agrismart.pk");
+                    if (socialUser == null)
+                    {
+                        ErrorMessage = $"Could not sign in with {provider}. Please try again or use email/password.";
+                        return Page();
+                    }
+                }
+                else
+                {
+                    await _userManager.AddToRoleAsync(socialUser, "Farmer");
+                }
+            }
+
+            // Ensure role is assigned
+            if (!await _userManager.IsInRoleAsync(socialUser, "Farmer") &&
+                !await _userManager.IsInRoleAsync(socialUser, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(socialUser, "Farmer");
+            }
+
+            socialUser.IsActive = true;
+            await _userManager.UpdateAsync(socialUser);
+
+            await _signInManager.SignInAsync(socialUser, isPersistent: false);
+
+            if (await _userManager.IsInRoleAsync(socialUser, "Admin"))
+                return Redirect("/admin/panel");
+
+            return Redirect("/farmer/dashboard");
+        }
+
         public class InputModel
         {
-            [Required]
-            [Display(Name = "Username or Email")]
+            [Display(Name = "Email or Username")]
             public string Username { get; set; }
 
-            [Required]
             [DataType(DataType.Password)]
             public string Password { get; set; }
 

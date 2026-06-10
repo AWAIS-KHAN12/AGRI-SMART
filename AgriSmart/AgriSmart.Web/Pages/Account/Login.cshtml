@@ -9,89 +9,684 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1976D2" />
-    <title>Login — AGRI-SMART</title>
+    <meta name="theme-color" content="#1B5E20" />
+    <meta name="description" content="Sign in to AgriSmart — Pakistan's smart agricultural advisory system." />
+    <title>Sign In — AGRI-SMART</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/mobile.css" rel="stylesheet" />
     <link href="~/css/app.css" rel="stylesheet" />
     <link href="~/css/open-iconic/font/css/open-iconic-bootstrap.min.css" rel="stylesheet" />
     <link href="~/css/icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --ag-green: #1B5E20;
+            --ag-green-mid: #2E7D32;
+            --ag-green-light: #43A047;
+            --ag-blue: #1565C0;
+            --ag-blue-mid: #1976D2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0d1b0f;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .login-bg {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            background: linear-gradient(135deg, #0a1f0a 0%, #0d2b1a 40%, #0a1a2e 100%);
+            overflow: hidden;
+        }
+
+        .login-bg::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(46,125,50,0.18) 0%, transparent 70%);
+            top: -150px;
+            left: -150px;
+            animation: pulse-glow 6s ease-in-out infinite;
+        }
+
+        .login-bg::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(21,101,192,0.15) 0%, transparent 70%);
+            bottom: -100px;
+            right: -100px;
+            animation: pulse-glow 6s ease-in-out infinite 3s;
+        }
+
+        @@keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        /* Floating leaves animation */
+        .leaf {
+            position: absolute;
+            opacity: 0.08;
+            animation: float 8s ease-in-out infinite;
+            font-size: 2rem;
+        }
+        .leaf:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+        .leaf:nth-child(2) { top: 30%; right: 8%; animation-delay: 2s; }
+        .leaf:nth-child(3) { bottom: 20%; left: 10%; animation-delay: 4s; }
+        .leaf:nth-child(4) { top: 60%; right: 5%; animation-delay: 1s; }
+        .leaf:nth-child(5) { bottom: 10%; right: 20%; animation-delay: 3s; }
+
+        @@keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(10deg); }
+            66% { transform: translateY(10px) rotate(-5deg); }
+        }
+
+        /* Main card */
+        .login-card-outer {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 10;
+            animation: slide-up 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+
+        @@keyframes slide-up {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Brand section */
+        .brand-section {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .brand-logo-wrap {
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 0.75rem;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(46,125,50,0.45), 0 2px 8px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.12);
+            animation: logo-pop 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+        }
+
+        @@keyframes logo-pop {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .brand-logo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            line-height: 1;
+        }
+
+        .brand-name .agri { color: #66BB6A; }
+        .brand-name .smart { color: #42A5F5; }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 0.25rem;
+            letter-spacing: 0.02em;
+        }
+
+        /* Form card */
+        .login-form-card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 1.75rem;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.45);
+            margin-bottom: 1.25rem;
+        }
+
+        /* Error alert */
+        .error-alert {
+            background: rgba(211,47,47,0.2);
+            border: 1px solid rgba(239,83,80,0.5);
+            color: #EF9A9A;
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.82rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Success alert */
+        .success-alert {
+            background: rgba(46,125,50,0.2);
+            border: 1px solid rgba(102,187,106,0.5);
+            color: #A5D6A7;
+            border-radius: 10px;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.82rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Input fields */
+        .field-group {
+            margin-bottom: 1rem;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .field-wrap {
+            position: relative;
+        }
+
+        .field-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.35);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .field-input {
+            width: 100%;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            font-family: 'Poppins', sans-serif;
+            min-height: 48px;
+            outline: none;
+        }
+
+        .field-input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .field-input:focus {
+            border-color: rgba(102,187,106,0.6);
+            background: rgba(255,255,255,0.12);
+            box-shadow: 0 0 0 3px rgba(102,187,106,0.15);
+        }
+
+        /* Remember & forgot row */
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            font-size: 0.82rem;
+        }
+
+        .remember-label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #66BB6A;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #66BB6A;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover { color: #A5D6A7; }
+
+        /* Primary login button */
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
+            box-shadow: 0 4px 16px rgba(46,125,50,0.4);
+            position: relative;
+            overflow: hidden;
+            min-height: 48px;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+            border-radius: inherit;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(46,125,50,0.5);
+        }
+
+        .btn-login:active { transform: translateY(0); }
+
+        .btn-login .spinner-sm {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+
+        @@keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.25rem 0;
+            color: rgba(255,255,255,0.25);
+            font-size: 0.78rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Social login buttons */
+        .social-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .btn-social {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            padding: 0.7rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: 1px solid transparent;
+            min-height: 46px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-social:hover { transform: translateY(-1px); }
+        .btn-social:active { transform: translateY(0); }
+
+        /* Google button - white style */
+        .btn-google {
+            background: #fff;
+            color: #3c4043;
+            border-color: rgba(255,255,255,0.8);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+        }
+
+        .btn-google:hover {
+            background: #f8f9fa;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-google svg { flex-shrink: 0; }
+
+        /* Facebook button - blue style */
+        .btn-facebook {
+            background: #1877F2;
+            color: #fff;
+            border-color: #1877F2;
+            box-shadow: 0 2px 8px rgba(24,119,242,0.35);
+        }
+
+        .btn-facebook:hover {
+            background: #166fe5;
+            box-shadow: 0 4px 16px rgba(24,119,242,0.5);
+        }
+
+        /* Loading overlay on social buttons */
+        .btn-social.loading { pointer-events: none; opacity: 0.8; }
+
+        /* Sign up link */
+        .signup-row {
+            text-align: center;
+            font-size: 0.83rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .signup-row a {
+            color: #66BB6A;
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .signup-row a:hover { color: #A5D6A7; }
+
+        /* Social login modal/overlay */
+        .social-loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .social-loading-overlay.active {
+            display: flex;
+            animation: fade-in 0.2s ease;
+        }
+
+        @@keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .social-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .social-loading-text {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .social-loading-subtext {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.78rem;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Security badge */
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            margin-top: 1.25rem;
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.25);
+        }
+    </style>
 </head>
 <body>
-    <form method="post" class="auth-login-page">
-        @Html.AntiForgeryToken()
-        <div class="brand-header">
-            <img src="~/images/logo.jpg" alt="Agri Smart Logo" style="width: 140px; height: 140px; object-fit: contain; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,.15); margin-bottom: 0.75rem;" />
-            <div class="brand-tagline" style="margin-top: 0.25rem;">(a smart agricultural advisory system)</div>
-        </div>
+    <!-- Social login loading overlay -->
+    <div class="social-loading-overlay" id="socialOverlay">
+        <div class="social-spinner"></div>
+        <div class="social-loading-text" id="socialLoadingText">Connecting to Google...</div>
+        <div class="social-loading-subtext">Authenticating your account</div>
+    </div>
 
-        <div class="login-card">
-            <h2>Welcome back!</h2>
-            <div class="mini-brand" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: #0D47A1; margin-bottom: 1rem; font-size: 0.85rem;"><img src="~/images/logo.jpg" alt="Logo" style="width: 24px; height: 24px; object-fit: contain; border-radius: 4px;" /> AGRI SMART</div>
+    <div class="login-bg">
+        <!-- Decorative floating leaves -->
+        <span class="leaf">🌿</span>
+        <span class="leaf">🌱</span>
+        <span class="leaf">🍃</span>
+        <span class="leaf">🌾</span>
+        <span class="leaf">🌿</span>
 
-            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-            {
-                <div class="alert-error">@Model.ErrorMessage</div>
-            }
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <div class="alert-error">@error.ErrorMessage</div>
-            }
-
-            <div class="input-group-agri">
-                <label asp-for="Input.Username">Username or Email</label>
-                <span class="input-icon"><span class="oi oi-person" aria-hidden="true"></span></span>
-                <input asp-for="Input.Username" placeholder="Enter your email" />
+        <div class="login-card-outer">
+            <!-- Brand -->
+            <div class="brand-section">
+                <div class="brand-logo-wrap">
+                    <img src="~/images/logo.jpg" alt="AgriSmart Logo" />
+                </div>
+                <div class="brand-name">
+                    <span class="agri">AGRI</span><span class="smart">SMART</span>
+                </div>
+                <div class="brand-sub">Smart Agricultural Advisory System</div>
             </div>
 
-            <div class="input-group-agri">
-                <label asp-for="Input.Password">Password</label>
-                <span class="input-icon"><span class="oi oi-lock-locked" aria-hidden="true"></span></span>
-                <input asp-for="Input.Password" type="password" placeholder="Enter your password" />
-            </div>
+            <!-- Form Card -->
+            <form method="post" class="login-form-card" id="loginForm" onsubmit="return onLoginSubmit()">
+                @Html.AntiForgeryToken()
 
-            <div class="forgot-link"><a href="#">Forgot Password?</a></div>
+                <!-- Hidden field to indicate social login type -->
+                <input type="hidden" id="SocialProvider" name="SocialProvider" value="" />
 
-            <div class="mb-2">
-                <label>
-                    <input asp-for="Input.RememberMe" type="checkbox" /> Remember Me
-                </label>
-            </div>
+                <div class="card-title">Welcome back 👋</div>
+                <div class="card-subtitle">Sign in to your AgriSmart account</div>
 
-            <button type="submit" class="btn-pill-login">LOG IN</button>
-
-            <div class="signup-prompt">Don't have an account? <a href="/register">Sign Up</a></div>
-
-            <div class="social-login my-3">
-                <div class="text-muted mb-2">Or connect with:</div>
-                <div class="social-btns row g-2 justify-content-center">
-                    <div class="col-6" style="max-width: 140px;">
-                        <button type="button" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 8px; font-weight: 600;" onclick="simulateSocialLogin('Google')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
-                                <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0c2.204 0 4.07.813 5.485 2.13l-2.224 2.224C10.281 3.376 9.22 3 8 3c-2.427 0-4.5 1.629-5.234 3.826a4.99 4.99 0 0 0-.3 1.175c-.06.27-.093.552-.093.843s.032.573.093.843a4.978 4.978 0 0 0 .3 1.175c.734 2.197 2.807 3.826 5.234 3.826 1.38 0 2.538-.35 3.41-.975.83-.585 1.354-1.42 1.566-2.402H8v-3.2h7.545z"/>
-                            </svg>
-                            Google
-                        </button>
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="error-alert">
+                        <span class="oi oi-warning" aria-hidden="true"></span>
+                        @Model.ErrorMessage
                     </div>
-                    <div class="col-6" style="max-width: 140px;">
-                        <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 8px; font-weight: 600;" onclick="simulateSocialLogin('Facebook')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16">
-                                <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
-                            </svg>
-                            Facebook
-                        </button>
+                }
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div class="error-alert">
+                        <span class="oi oi-warning" aria-hidden="true"></span>
+                        @error.ErrorMessage
+                    </div>
+                }
+                @if (Model.SuccessMessage != null)
+                {
+                    <div class="success-alert">
+                        <span class="oi oi-check" aria-hidden="true"></span>
+                        @Model.SuccessMessage
+                    </div>
+                }
+
+                <!-- Username/Email -->
+                <div class="field-group">
+                    <label class="field-label" asp-for="Input.Username">Email or Username</label>
+                    <div class="field-wrap">
+                        <span class="field-icon oi oi-person" aria-hidden="true"></span>
+                        <input class="field-input" asp-for="Input.Username"
+                               id="Input_Username"
+                               placeholder="Enter your email or username"
+                               autocomplete="username"
+                               autocorrect="off"
+                               autocapitalize="none"
+                               spellcheck="false" />
                     </div>
                 </div>
+
+                <!-- Password -->
+                <div class="field-group">
+                    <label class="field-label" asp-for="Input.Password">Password</label>
+                    <div class="field-wrap">
+                        <span class="field-icon oi oi-lock-locked" aria-hidden="true"></span>
+                        <input class="field-input" asp-for="Input.Password"
+                               id="Input_Password"
+                               type="password"
+                               placeholder="Enter your password"
+                               autocomplete="current-password" />
+                    </div>
+                </div>
+
+                <!-- Options row -->
+                <div class="options-row">
+                    <label class="remember-label">
+                        <input asp-for="Input.RememberMe" type="checkbox" id="Input_RememberMe" />
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <!-- Login button -->
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span id="loginBtnText">Sign In</span>
+                    <div class="spinner-border spinner-border-sm text-light ms-2" id="loginSpinner" style="display:none; vertical-align: middle;" role="status"></div>
+                </button>
+
+                <!-- Email OTP Button -->
+                <div style="margin-top: 0.75rem;">
+                    <a href="/login-otp" class="btn btn-outline-success w-100 py-2" style="border-radius: 12px; font-weight: 600; font-family: 'Poppins', sans-serif; font-size: 0.9rem; color: #66BB6A; border-color: rgba(102,187,106,0.4); background: rgba(102,187,106,0.05);">
+                        <span class="oi oi-key" style="margin-right: 6px;"></span> Sign in with Email OTP
+                    </a>
+                </div>
+
+                <!-- Divider -->
+                <div class="divider">or continue with</div>
+
+                <!-- Social login buttons -->
+                <div class="social-btns">
+                    <button type="button" class="btn-social btn-google" id="btnGoogle" onclick="handleSocialLogin('Google')">
+                        <!-- Google SVG logo (official colors) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        Google
+                    </button>
+
+                    <button type="button" class="btn-social btn-facebook" id="btnFacebook" onclick="handleSocialLogin('Facebook')">
+                        <!-- Facebook SVG logo -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        Facebook
+                    </button>
+                </div>
+
+                <!-- Sign up link -->
+                <div class="signup-row">
+                    Don't have an account? <a href="/register">Create one now</a>
+                </div>
+            </form>
+
+            <!-- Security badge -->
+            <div class="security-badge">
+                <span class="oi oi-lock-locked" style="font-size:0.7rem;" aria-hidden="true"></span>
+                Secured with 256-bit SSL encryption
             </div>
         </div>
-    </form>
+    </div>
 
     <script>
-        function simulateSocialLogin(provider) {
-            const username = provider === "Google" ? "google_user" : "facebook_user";
-            document.getElementById("Input_Username").value = username;
-            document.getElementById("Input_Password").value = "OAuth@1234";
-            document.querySelector("form").submit();
+        function onLoginSubmit() {
+            const btn = document.getElementById('loginBtn');
+            const spinner = document.getElementById('loginSpinner');
+            const text = document.getElementById('loginBtnText');
+            
+            if (document.getElementById('Input_Username').value && document.getElementById('Input_Password').value) {
+                spinner.style.display = 'inline-block';
+                text.textContent = 'Signing in...';
+                btn.style.pointerEvents = 'none';
+                btn.setAttribute('disabled', 'disabled');
+                return true;
+            }
+            return false;
+        }
+
+        function handleSocialLogin(provider) {
+            // Show loading overlay
+            const overlay = document.getElementById('socialOverlay');
+            const loadingText = document.getElementById('socialLoadingText');
+            loadingText.textContent = 'Connecting to ' + provider + '...';
+            overlay.classList.add('active');
+
+            // Disable both social buttons
+            document.getElementById('btnGoogle').classList.add('loading');
+            document.getElementById('btnFacebook').classList.add('loading');
+
+            // Set the social provider hidden field
+            document.getElementById('SocialProvider').value = provider;
+
+            // Set credentials for server-side social intercept
+            const username = provider === 'Google' ? 'google_user' : 'facebook_user';
+            document.getElementById('Input_Username').value = username;
+            document.getElementById('Input_Password').value = 'OAuth@1234';
+
+            // Simulate OAuth handshake delay (1.5s), then submit
+            setTimeout(function () {
+                loadingText.textContent = 'Verifying your identity...';
+                setTimeout(function () {
+                    // Remove onsubmit to bypass normal spinner script
+                    document.getElementById('loginForm').removeAttribute('onsubmit');
+                    document.getElementById('loginForm').submit();
+                }, 800);
+            }, 1200);
         }
     </script>
 </body>
